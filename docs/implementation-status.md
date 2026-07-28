@@ -268,4 +268,4 @@
   - failed variant generation removes pending filesystem and database state
   - media referenced by project hero fields cannot be deleted
 - Review result: self-review completed against Task 7 and the design specification. The approved portrait treatment step still requires an approved image-editing tool/source workflow before production media is finalized.
-- Commit SHA: pending
+- Commit SHA: `e717491`
