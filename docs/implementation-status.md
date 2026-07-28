@@ -372,4 +372,4 @@
   - revision suggestions are stored side-by-side and never overwrite source without explicit acceptance
   - acceptance returns 409 when the current source hash differs from the suggestion source hash
 - Review result: self-review completed against Task 10 and the design specification. Tests use mocked NVIDIA endpoints only; no real external NVIDIA calls were made.
-- Commit SHA: pending
+- Commit SHA: `84e20df`
