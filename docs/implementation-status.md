@@ -305,3 +305,32 @@
   - admin forms include CSRF token fields for production CSRF enforcement
 - Review result: self-review completed against Task 8 and the design specification. Blog, experience, profile, and settings endpoints are present as protected list/placeholder pages; richer editing for those domains remains for later CMS tasks.
 - Commit SHA: `6cb21d7`
+
+## Task 9: Rich-Text and Markdown Editing
+
+- Deliverable: server-side editor source contract, draft/publish contract enforcement, Toast UI editor adapter with a narrow `PortfolioEditor` API, admin editor component, edit-page editor asset loading, and editor wiring tests.
+- Affected files:
+  - `src/portfolio/admin/routes.py`
+  - `src/portfolio/content/editor_contract.py`
+  - `src/portfolio/content/services.py`
+  - `src/portfolio/static_src/ts/editor.ts`
+  - `src/portfolio/templates/admin/base.html`
+  - `src/portfolio/templates/admin/components/editor.html`
+  - `src/portfolio/templates/admin/content/edit.html`
+  - `tests/unit/content/test_editor_contract.py`
+  - `tests_e2e/test_editor_roundtrip.py`
+  - `vite.config.ts`
+- Tests and verification:
+  - `uv run pytest tests/unit/content/test_editor_contract.py -v`: passed, 6 tests
+  - `npm run build`: passed with a non-failing Toast UI editor chunk-size warning
+  - `uv run pytest tests_e2e/test_editor_roundtrip.py -v`: passed, 2 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 66 tests
+- Security controls verified:
+  - raw HTML source is rejected instead of silently accepted into drafts
+  - editor source over 500 KB is rejected
+  - Markdown images must use approved `/media/` paths or the production media origin
+  - draft saves and publish validation both enforce the editor contract before rendering
+  - the browser adapter syncs editor Markdown back to the submitted source field on form submit
+- Review result: self-review completed against Task 9 and the design specification. The editor E2E tests currently verify adapter/template wiring without launching a real browser; full Playwright round-trip coverage remains useful once browser fixtures are introduced.
+- Commit SHA: pending

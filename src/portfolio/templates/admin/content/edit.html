@@ -2,6 +2,10 @@
 
 {% block title %}Edit {{ entity.title }}{% endblock %}
 
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/editor.css') }}">
+{% endblock %}
+
 {% block content %}
   <section class="admin-panel">
     <p class="eyebrow">{{ content_type|title }}</p>
@@ -23,7 +27,10 @@
       <label>Title <input name="title" value="{{ form.title }}" required></label>
       <label>Slug <input name="slug" value="{{ form.slug }}" required></label>
       <label>Summary <textarea name="summary" maxlength="320">{{ form.summary }}</textarea></label>
-      <label>Markdown <textarea name="source_markdown" rows="16">{{ form.source_markdown }}</textarea></label>
+      <label>Markdown</label>
+      {% with name="source_markdown", value=form.source_markdown %}
+        {% include "admin/components/editor.html" %}
+      {% endwith %}
       <button type="submit">Save draft</button>
     </form>
     <form method="post" action="{{ url_for('admin.archive_project', project_id=entity.id) }}">
@@ -35,4 +42,8 @@
       <button type="submit">Restore to draft</button>
     </form>
   </section>
+{% endblock %}
+
+{% block scripts %}
+  <script type="module" src="{{ url_for('static', filename='assets/editor.js') }}"></script>
 {% endblock %}

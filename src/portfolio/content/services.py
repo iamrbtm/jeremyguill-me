@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import select
 
 from portfolio.audit.services import record_event
+from portfolio.content.editor_contract import validate_editor_source
 from portfolio.content.enums import PublicationState
 from portfolio.content.models import BlogPost, Project, Redirect, utcnow
 from portfolio.content.rendering import render_markdown
@@ -25,6 +26,9 @@ class ContentValidationError(ValueError):
 def save_draft(entity: object, command: ContentCommand, *, expected_version: int | None = None):
     if expected_version is not None and entity.version != expected_version:
         raise ContentConflict("Content was modified by another edit")
+    editor_validation = validate_editor_source(command.source_markdown)
+    if not editor_validation.valid:
+        raise ContentValidationError(" ".join(editor_validation.errors))
     entity.title = command.title.strip()
     entity.summary = command.summary.strip()
     entity.source_markdown = command.source_markdown
@@ -47,6 +51,9 @@ def save_draft(entity: object, command: ContentCommand, *, expected_version: int
 def validate_publishable(entity: object) -> None:
     if not entity.title.strip() or not entity.slug.strip():
         raise ContentValidationError("Published content requires a title and slug")
+    editor_validation = validate_editor_source(entity.source_markdown)
+    if not editor_validation.valid:
+        raise ContentValidationError(" ".join(editor_validation.errors))
     entity.rendered_html = render_markdown(entity.source_markdown)
 
 

@@ -18,7 +18,7 @@ from portfolio.audit.services import record_event
 from portfolio.auth.decorators import passkey_required
 from portfolio.content.enums import PublicationState
 from portfolio.content.models import BlogPost, Experience, Project, SiteProfile
-from portfolio.content.services import ContentConflict, save_draft
+from portfolio.content.services import ContentConflict, ContentValidationError, save_draft
 from portfolio.extensions import db
 
 from .forms import ProjectForm, project_form_for
@@ -83,6 +83,14 @@ def update_project(project_id: uuid.UUID):
                 conflict=True,
             ),
             409,
+        )
+    except ContentValidationError as exc:
+        form.add_error("source_markdown", str(exc))
+        return (
+            render_template(
+                "admin/content/edit.html", entity=project, form=form, content_type="projects"
+            ),
+            422,
         )
     return redirect(url_for("admin.edit_project", project_id=project.id))
 
