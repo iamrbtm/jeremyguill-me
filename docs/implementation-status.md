@@ -333,4 +333,4 @@
   - draft saves and publish validation both enforce the editor contract before rendering
   - the browser adapter syncs editor Markdown back to the submitted source field on form submit
 - Review result: self-review completed against Task 9 and the design specification. The editor E2E tests currently verify adapter/template wiring without launching a real browser; full Playwright round-trip coverage remains useful once browser fixtures are introduced.
-- Commit SHA: pending
+- Commit SHA: `93980cf`
