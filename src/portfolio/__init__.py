@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from importlib import import_module
 
 from flask import Flask
 
@@ -19,11 +20,14 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
     if config:
         app.config.update(config)
 
-    from .extensions import csrf, db, limiter
+    from .extensions import csrf, db, limiter, migrate
 
     db.init_app(app)
     csrf.init_app(app)
     limiter.init_app(app)
+    migrate.init_app(app, db)
+
+    import_models()
 
     from .public.routes import public_bp
 
@@ -44,3 +48,16 @@ def register_error_handlers(app: Flask) -> None:
     @app.errorhandler(500)
     def server_error(_error: object):
         return render_template("errors/500.html"), 500
+
+
+def import_models() -> None:
+    for module_name in (
+        "portfolio.audit.models",
+        "portfolio.auth.models",
+        "portfolio.contact.models",
+        "portfolio.content.models",
+        "portfolio.integrations.models",
+        "portfolio.jobs.models",
+        "portfolio.media.models",
+    ):
+        import_module(module_name)
