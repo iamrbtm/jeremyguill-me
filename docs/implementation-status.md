@@ -505,3 +505,37 @@
   - authorization/API key/token text is redacted from structured logs
 - Review result: self-review completed against Task 14 and the design specification. Production HSTS remains an Nginx/HTTPS deployment concern for Task 15.
 - Commit SHA: `e5be8ed`
+
+## Task 15: Docker Compose, Backup, Nginx, and Operations
+
+- Deliverable: readiness endpoint, Compose resource/logging hardening, encrypted backup and explicit restore guardrails, backup image `age` support, host Nginx config for static/media/proxy/TLS, deployment docs, and backup/restore docs.
+- Affected files:
+  - `compose.yaml`
+  - `docker/backup.Dockerfile`
+  - `docker/backup.sh`
+  - `docker/nginx/jeremyguill.me.conf`
+  - `docs/backup-and-restore.md`
+  - `docs/deployment.md`
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/operations/routes.py`
+  - `src/portfolio/operations/services.py`
+  - `tests/integration/operations/test_readiness.py`
+  - `tests/operations/test_compose_config.py`
+- Tests and verification:
+  - `docker compose config`: passed
+  - `docker build -t jeremyguill-portfolio:test .`: passed
+  - `uv run pytest tests/integration/operations tests/operations -v`: passed, 9 tests
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed, 61 source files
+  - `uv run pip-audit`: passed, no known vulnerabilities found for audited dependencies
+  - `uv run pytest -v`: passed, 123 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Operations controls verified:
+  - `/health/ready` reports database success/failure without exception text
+  - database service exposes no host port
+  - web binds to `127.0.0.1:7777`
+  - services use read-only filesystems, tmpfs, restart policies, memory limits, and log rotation
+  - backup script uses `pg_dump --format=custom`, archives media, encrypts with `age` when a recipient is present, and refuses restore without explicit confirmation
+  - Nginx config caps uploads at 15 MB, serves `/static/` and `/media/`, denies dotfiles, forwards proxy headers, and applies HSTS only on HTTPS
+- Review result: self-review completed against Task 15 and the design specification. Local Compose still uses development password defaults for repeatable local validation; deployment docs call out production secret/environment requirements.
+- Commit SHA: pending

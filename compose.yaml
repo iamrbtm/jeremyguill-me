@@ -28,6 +28,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
 
   worker:
@@ -50,6 +56,12 @@ services:
     volumes:
       - static_data:/app/var/static
       - media_data:/app/var/media
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
 
   db:
@@ -65,6 +77,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
 
   backup:
@@ -79,6 +97,12 @@ services:
     volumes:
       - media_data:/source/media:ro
       - backup_data:/backups
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: "no"
 
 volumes:
