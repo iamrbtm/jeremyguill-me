@@ -95,4 +95,4 @@
   - `uv run pytest -v`: passed, 10 tests
   - `uv run ruff check .`: passed
 - Review result: self-review completed against Task 3 and the design specification. Secret-bearing metadata keys are recursively redacted before persistence; no update service was added.
-- Commit SHA: pending local commit.
+- Commit SHA: `c261d14`
