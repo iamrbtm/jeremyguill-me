@@ -1,0 +1,16 @@
+{% extends "admin/base.html" %}
+
+{% block title %}AI Settings{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">Integrations</p>
+    <h1>NVIDIA editorial assistance</h1>
+    <p>Validate and save an NVIDIA API key. Stored keys are encrypted and never rendered back.</p>
+    <form method="post" action="{{ url_for('integrations.save_ai_key') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>API key <input type="password" name="api_key" autocomplete="off"></label>
+      <button type="submit">Validate key</button>
+    </form>
+  </section>
+{% endblock %}

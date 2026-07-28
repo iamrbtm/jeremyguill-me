@@ -13,6 +13,8 @@ class Settings:
     rp_id: str
     rate_limit_storage_uri: str
     static_folder: str
+    settings_encryption_key: str
+    nvidia_model: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -28,4 +30,6 @@ class Settings:
             rp_id=os.getenv("WEBAUTHN_RP_ID", "localhost"),
             rate_limit_storage_uri=os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
             static_folder=os.getenv("STATIC_FOLDER", "static"),
+            settings_encryption_key=os.getenv("SETTINGS_ENCRYPTION_KEY", ""),
+            nvidia_model=os.getenv("NVIDIA_MODEL", "meta/llama-3.1-70b-instruct"),
         )

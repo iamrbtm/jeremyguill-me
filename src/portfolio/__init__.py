@@ -16,8 +16,11 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
         SECRET_KEY=settings.secret_key,
         SQLALCHEMY_DATABASE_URI=settings.database_url,
         PUBLIC_ORIGIN=settings.public_origin,
+        APP_ENV=settings.app_env,
         WEBAUTHN_RP_ID=settings.rp_id,
         RATELIMIT_STORAGE_URI=settings.rate_limit_storage_uri,
+        SETTINGS_ENCRYPTION_KEY=settings.settings_encryption_key,
+        NVIDIA_MODEL=settings.nvidia_model,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Strict",
         SESSION_COOKIE_SECURE=settings.app_env == "production",
@@ -37,12 +40,14 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
 
     from .admin.routes import admin_bp
     from .auth.routes import auth_bp
+    from .integrations.routes import integrations_bp
     from .media.routes import media_bp
     from .public.routes import public_bp
 
     app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(integrations_bp)
     app.register_blueprint(media_bp)
 
     from .auth.cli import admin_cli

@@ -5,7 +5,7 @@ from alembic.script import ScriptDirectory
 
 def test_migration_chain_head_is_latest(alembic_config):
     script = ScriptDirectory.from_config(alembic_config)
-    assert script.get_current_head() == "0002_auth_challenges"
+    assert script.get_current_head() == "0003_ai_revision_suggestions"
 
 
 def test_initial_migration_declares_required_tables(initial_migration_source):

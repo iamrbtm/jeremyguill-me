@@ -334,3 +334,42 @@
   - the browser adapter syncs editor Markdown back to the submitted source field on form submit
 - Review result: self-review completed against Task 9 and the design specification. The editor E2E tests currently verify adapter/template wiring without launching a real browser; full Playwright round-trip coverage remains useful once browser fixtures are introduced.
 - Commit SHA: `93980cf`
+
+## Task 10: NVIDIA Integration and Controlled AI Revision
+
+- Deliverable: encrypted integration secret handling, NVIDIA model validation/classification, redacted NVIDIA revision client, persisted AI revision suggestions, source-hash guarded acceptance, rejection endpoint, AI settings template, AI revision component event scaffold, and Alembic migration for suggestions.
+- Affected files:
+  - `migrations/versions/0003_ai_revision_suggestions.py`
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/config.py`
+  - `src/portfolio/integrations/crypto.py`
+  - `src/portfolio/integrations/models.py`
+  - `src/portfolio/integrations/nvidia.py`
+  - `src/portfolio/integrations/routes.py`
+  - `src/portfolio/integrations/services.py`
+  - `src/portfolio/static_src/ts/ai_revision.ts`
+  - `src/portfolio/templates/admin/components/ai_revision.html`
+  - `src/portfolio/templates/admin/settings/ai.html`
+  - `tests/integration/integrations/test_ai_revision.py`
+  - `tests/integration/test_initial_migration.py`
+  - `tests/unit/integrations/test_crypto.py`
+  - `tests/unit/integrations/test_nvidia.py`
+  - `vite.config.ts`
+- Tests and verification:
+  - `uv run pytest tests/unit/integrations tests/integration/integrations -v`: passed, 11 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 77 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+  - `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task10-migration.sqlite" uv run flask --app portfolio db upgrade`: passed
+  - `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task10-migration.sqlite" uv run flask --app portfolio db downgrade base`: passed
+  - second `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task10-migration.sqlite" uv run flask --app portfolio db upgrade`: passed
+- Security controls verified:
+  - encrypted API key ciphertext does not contain plaintext and decrypts only through configured key material
+  - production requires `SETTINGS_ENCRYPTION_KEY`
+  - NVIDIA model discovery returns all models while disabling non-text models with an explanation
+  - NVIDIA API errors are redacted and do not include the submitted API key
+  - timeouts return 504 and leave source Markdown unchanged
+  - revision suggestions are stored side-by-side and never overwrite source without explicit acceptance
+  - acceptance returns 409 when the current source hash differs from the suggestion source hash
+- Review result: self-review completed against Task 10 and the design specification. Tests use mocked NVIDIA endpoints only; no real external NVIDIA calls were made.
+- Commit SHA: pending
