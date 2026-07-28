@@ -17,6 +17,7 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
         SQLALCHEMY_DATABASE_URI=settings.database_url,
         PUBLIC_ORIGIN=settings.public_origin,
         WEBAUTHN_RP_ID=settings.rp_id,
+        RATELIMIT_STORAGE_URI=settings.rate_limit_storage_uri,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Strict",
         SESSION_COOKIE_SECURE=settings.app_env == "production",

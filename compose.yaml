@@ -8,6 +8,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://portfolio:development-only-postgres-password@db:5432/portfolio}
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:7777}
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
+      RATELIMIT_STORAGE_URI: ${RATELIMIT_STORAGE_URI:-memory://}
     ports:
       - "127.0.0.1:7777:8000"
     depends_on:
@@ -36,6 +37,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://portfolio:development-only-postgres-password@db:5432/portfolio}
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:7777}
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
+      RATELIMIT_STORAGE_URI: ${RATELIMIT_STORAGE_URI:-memory://}
     depends_on:
       db:
         condition: service_healthy

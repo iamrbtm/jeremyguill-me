@@ -11,6 +11,7 @@ class Settings:
     database_url: str
     public_origin: str
     rp_id: str
+    rate_limit_storage_uri: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -24,4 +25,5 @@ class Settings:
             database_url=os.getenv("DATABASE_URL", "sqlite+pysqlite:///:memory:"),
             public_origin=os.getenv("PUBLIC_ORIGIN", "http://localhost:5000"),
             rp_id=os.getenv("WEBAUTHN_RP_ID", "localhost"),
+            rate_limit_storage_uri=os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
         )
