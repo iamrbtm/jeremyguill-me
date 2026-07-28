@@ -1,0 +1,9 @@
+{% extends "public/base.html" %}
+{% block title %}Contact | Jeremy Guill{% endblock %}
+{% block content %}
+<section class="page-section">
+  <p class="eyebrow">Contact</p>
+  <h1>Talk about a practical system.</h1>
+  <p>Email Jeremy at <a href="mailto:{{ view.profile.email or 'rbtm2006@me.com' }}">{{ view.profile.email or "rbtm2006@me.com" }}</a>.</p>
+</section>
+{% endblock %}

@@ -12,6 +12,7 @@ class Settings:
     public_origin: str
     rp_id: str
     rate_limit_storage_uri: str
+    static_folder: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -26,4 +27,5 @@ class Settings:
             public_origin=os.getenv("PUBLIC_ORIGIN", "http://localhost:5000"),
             rp_id=os.getenv("WEBAUTHN_RP_ID", "localhost"),
             rate_limit_storage_uri=os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
+            static_folder=os.getenv("STATIC_FOLDER", "static"),
         )

@@ -1,0 +1,13 @@
+{% extends "public/base.html" %}
+{% block title %}Experience | Jeremy Guill{% endblock %}
+{% block content %}
+<section class="page-section">
+  <h1>Technical Experience</h1>
+  {% for item in view.experience %}
+    <article class="timeline-item">
+      <h2>{{ item.role }} · {{ item.organization }}</h2>
+      <p>{{ item.summary }}</p>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

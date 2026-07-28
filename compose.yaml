@@ -9,6 +9,9 @@ services:
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:7777}
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
       RATELIMIT_STORAGE_URI: ${RATELIMIT_STORAGE_URI:-memory://}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-1}
+      SEED_INITIAL_CONTENT: ${SEED_INITIAL_CONTENT:-1}
+      STATIC_FOLDER: ${STATIC_FOLDER:-/app/var/static}
     ports:
       - "127.0.0.1:7777:8000"
     depends_on:

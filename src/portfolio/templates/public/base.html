@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Jeremy Guill{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/site.css') }}">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    {% include "components/navigation.html" %}
+    <main id="main">
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+      <p>Jeremy Guill builds practical software for real-world operations.</p>
+    </footer>
+  </body>
+</html>

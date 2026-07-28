@@ -206,3 +206,37 @@
 - Limitation: local Compose currently uses development environment defaults so it can validate and build without production secret files. Task 15 must replace this with production secret-file handling before deployment.
 - Review result: self-review completed. The database service exposes no host ports, the web service binds to `127.0.0.1:7777`, private `reference/` assets are excluded from Docker build context, and the runtime image runs as the non-root `portfolio` user.
 - Commit SHA: `06cc837`
+
+## Task 6: Mark-First Public Portfolio
+
+- Deliverable: Mark-first public homepage, project detail, experience, contact routes/templates, public view models, responsive CSS, stable Vite asset names, and idempotent initial content seed command using factual resume-supported content.
+- Affected files:
+  - `compose.yaml`
+  - `docker/entrypoint.sh`
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/config.py`
+  - `src/portfolio/content/seed.py`
+  - `src/portfolio/public/routes.py`
+  - `src/portfolio/public/view_models.py`
+  - `src/portfolio/static_src/css/site.css`
+  - `src/portfolio/templates/components/navigation.html`
+  - `src/portfolio/templates/components/project_card.html`
+  - `src/portfolio/templates/public/base.html`
+  - `src/portfolio/templates/public/contact.html`
+  - `src/portfolio/templates/public/experience.html`
+  - `src/portfolio/templates/public/home.html`
+  - `src/portfolio/templates/public/project.html`
+  - `tests/integration/public/test_public_pages.py`
+  - `tests/unit/public/test_view_models.py`
+  - `tests/unit/test_app_factory.py`
+  - `vite.config.ts`
+- Tests and verification:
+  - `uv run pytest tests/integration/public tests/unit/public -v`: passed, 8 tests
+  - `uv run pytest -v`: passed, 38 tests
+  - `uv run ruff check .`: passed
+  - `npm run build`: passed
+  - `docker compose config`: passed
+  - `docker compose build`: passed
+- Docker/local run note: local Compose now runs migrations and `flask content seed-initial` automatically for the web service so the homepage is usable after `docker compose up --build -d`.
+- Review result: self-review completed against Task 6 and the design specification. Blog navigation hides unless a published blog post exists; draft projects return 404; public claims are sourced from `reference/Resume2026.md`.
+- Commit SHA: pending local commit.

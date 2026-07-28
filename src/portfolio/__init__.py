@@ -11,7 +11,7 @@ from .config import Settings
 
 def create_app(config: Mapping[str, object] | None = None) -> Flask:
     settings = Settings.from_env()
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder=settings.static_folder)
     app.config.from_mapping(
         SECRET_KEY=settings.secret_key,
         SQLALCHEMY_DATABASE_URI=settings.database_url,
@@ -42,8 +42,10 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
     app.register_blueprint(auth_bp)
 
     from .auth.cli import admin_cli
+    from .content.seed import content_cli
 
     app.cli.add_command(admin_cli)
+    app.cli.add_command(content_cli)
 
     register_error_handlers(app)
 

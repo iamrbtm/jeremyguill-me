@@ -9,6 +9,11 @@ export default defineConfig({
         site: "src/portfolio/static_src/ts/site.ts",
         passkeys: "src/portfolio/static_src/ts/passkeys.ts",
       },
+      output: {
+        entryFileNames: "assets/[name].js",
+        chunkFileNames: "assets/[name].js",
+        assetFileNames: "assets/[name][extname]",
+      },
     },
   },
 });

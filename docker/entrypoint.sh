@@ -6,4 +6,12 @@ if [ -d /app/bundled_static ]; then
   cp -R /app/bundled_static/. /app/var/static/
 fi
 
+if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
+  flask db upgrade
+fi
+
+if [ "${SEED_INITIAL_CONTENT:-0}" = "1" ]; then
+  flask content seed-initial
+fi
+
 exec "$@"
