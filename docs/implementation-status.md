@@ -239,4 +239,4 @@
   - `docker compose build`: passed
 - Docker/local run note: local Compose now runs migrations and `flask content seed-initial` automatically for the web service so the homepage is usable after `docker compose up --build -d`.
 - Review result: self-review completed against Task 6 and the design specification. Blog navigation hides unless a published blog post exists; draft projects return 404; public claims are sourced from `reference/Resume2026.md`.
-- Commit SHA: pending local commit.
+- Commit SHA: `4c0cf85`
