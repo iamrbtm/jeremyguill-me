@@ -184,3 +184,25 @@
   - external links receive `rel="noopener noreferrer"`
 - Review result: self-review completed against Task 5 and the design specification. AI output and editor input will consume the same sanitizer in later tasks.
 - Commit SHA: `db5fbae`
+
+## Pre-Task 6 Dockerization Foundation
+
+- Deliverable: buildable Docker image, local Compose services for `web`, `worker`, `db`, and `backup`, non-root runtime container, static asset build stage, entrypoint static copy, private reference asset exclusion, and initial Compose safety tests.
+- Affected files:
+  - `.dockerignore`
+  - `Dockerfile`
+  - `compose.yaml`
+  - `docker/backup.Dockerfile`
+  - `docker/backup.sh`
+  - `docker/entrypoint.sh`
+  - `src/portfolio/worker.py`
+  - `tests/operations/test_compose_config.py`
+- Verification:
+  - `uv run pytest tests/operations/test_compose_config.py -v`: passed, 3 tests
+  - `uv run pytest -v`: passed, 28 tests
+  - `uv run ruff check .`: passed
+  - `docker compose config`: passed
+  - `docker build -t jeremyguill-portfolio:local .`: passed
+- Limitation: local Compose currently uses development environment defaults so it can validate and build without production secret files. Task 15 must replace this with production secret-file handling before deployment.
+- Review result: self-review completed. The database service exposes no host ports, the web service binds to `127.0.0.1:8000`, private `reference/` assets are excluded from Docker build context, and the runtime image runs as the non-root `portfolio` user.
+- Commit SHA: pending local commit.

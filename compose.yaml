@@ -1,0 +1,86 @@
+services:
+  web:
+    build: .
+    image: jeremyguill-portfolio:local
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:-development-only-secret}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://portfolio:development-only-postgres-password@db:5432/portfolio}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:8000}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - static_data:/app/var/static
+      - media_data:/app/var/media
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  worker:
+    image: jeremyguill-portfolio:local
+    build: .
+    command: ["python", "-m", "portfolio.worker"]
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:-development-only-secret}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://portfolio:development-only-postgres-password@db:5432/portfolio}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-http://localhost:8000}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-localhost}
+    depends_on:
+      db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - media_data:/app/var/media
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: portfolio
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-development-only-postgres-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backup:
+    build:
+      context: .
+      dockerfile: docker/backup.Dockerfile
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-development-only-postgres-password}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - media_data:/source/media:ro
+      - backup_data:/backups
+    restart: "no"
+
+volumes:
+  postgres_data:
+  static_data:
+  media_data:
+  backup_data:
+
+networks:
+  default:
+    internal: false
