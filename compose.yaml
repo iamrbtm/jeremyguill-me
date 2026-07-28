@@ -43,6 +43,7 @@ services:
     tmpfs:
       - /tmp
     volumes:
+      - static_data:/app/var/static
       - media_data:/app/var/media
     restart: unless-stopped
 
