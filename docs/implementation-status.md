@@ -183,4 +183,4 @@
   - rendered HTML is sanitized through an explicit tag/attribute allowlist
   - external links receive `rel="noopener noreferrer"`
 - Review result: self-review completed against Task 5 and the design specification. AI output and editor input will consume the same sanitizer in later tasks.
-- Commit SHA: pending local commit.
+- Commit SHA: `db5fbae`
