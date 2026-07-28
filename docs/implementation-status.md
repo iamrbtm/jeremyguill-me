@@ -82,3 +82,17 @@
 - Implementation note: `Job` is stored in `src/portfolio/jobs/models.py` to preserve the domain-module boundary even though the Task 2 file list omitted that path while requiring a `Job` model.
 - Review result: self-review completed against Task 2 and the design specification. No secrets or private reference assets are staged intentionally.
 - Commit SHA: `91cd21c`
+
+## Task 3: Append-Oriented Audit Service
+
+- Deliverable: recursive metadata redaction and append-only audit event creation service.
+- Affected files:
+  - `src/portfolio/audit/services.py`
+  - `src/portfolio/audit/types.py`
+  - `tests/unit/audit/test_audit_service.py`
+- Tests and verification:
+  - `uv run pytest tests/unit/audit/test_audit_service.py -v`: passed, 3 tests
+  - `uv run pytest -v`: passed, 10 tests
+  - `uv run ruff check .`: passed
+- Review result: self-review completed against Task 3 and the design specification. Secret-bearing metadata keys are recursively redacted before persistence; no update service was added.
+- Commit SHA: pending local commit.
