@@ -437,3 +437,29 @@
   - admin contact state transitions require a passkey session
 - Review result: self-review completed against Task 12 and the design specification. SMTP settings are configuration-backed and no real email was sent during tests.
 - Commit SHA: `f5dabe2`
+
+## Task 13: Background Worker and Scheduled Publication
+
+- Deliverable: database-backed unique job enqueue, due-job claiming with leases, bounded retry/backoff and failed state, publish/email/media handlers, and `run_once` worker processing with graceful no-job behavior.
+- Affected files:
+  - `src/portfolio/content/services.py`
+  - `src/portfolio/jobs/handlers.py`
+  - `src/portfolio/jobs/services.py`
+  - `src/portfolio/worker.py`
+  - `tests/integration/jobs/test_worker.py`
+  - `tests/unit/jobs/test_job_service.py`
+- Tests and verification:
+  - `uv run pytest tests/unit/jobs tests/integration/jobs -v`: passed, 9 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 106 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Reliability controls verified:
+  - active pending/running jobs are not duplicated
+  - completed jobs allow a new future job for the same target
+  - claimed jobs are not claimed by a second worker while leased
+  - expired leases can be reclaimed
+  - failed jobs retry with bounded backoff and move to `failed` after five attempts
+  - scheduled projects publish idempotently through the worker
+  - contact notification jobs are delegated to the mailer path
+- Review result: self-review completed against Task 13 and the design specification. SQLite exercises the lease state transitions; PostgreSQL `SKIP LOCKED` remains covered by the SQLAlchemy claim query shape and should be verified against PostgreSQL before production.
+- Commit SHA: pending

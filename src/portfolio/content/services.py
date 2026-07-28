@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import select
-
 from portfolio.audit.services import record_event
 from portfolio.content.editor_contract import validate_editor_source
 from portfolio.content.enums import PublicationState
@@ -12,7 +10,7 @@ from portfolio.content.rendering import render_markdown
 from portfolio.content.revisions import create_revision, entity_type_for
 from portfolio.content.schemas import ContentCommand
 from portfolio.extensions import db
-from portfolio.jobs.models import Job
+from portfolio.jobs.services import enqueue_unique
 
 
 class ContentConflict(ValueError):
@@ -55,24 +53,6 @@ def validate_publishable(entity: object) -> None:
     if not editor_validation.valid:
         raise ContentValidationError(" ".join(editor_validation.errors))
     entity.rendered_html = render_markdown(entity.source_markdown)
-
-
-def enqueue_unique(kind: str, entity_type: str, entity_id, run_at: datetime) -> Job:
-    existing = db.session.execute(
-        select(Job).where(
-            Job.kind == kind,
-            Job.entity_type == entity_type,
-            Job.entity_id == entity_id,
-            Job.state == "pending",
-        )
-    ).scalar_one_or_none()
-    if existing is not None:
-        existing.run_at = run_at
-        return existing
-    job = Job(kind=kind, entity_type=entity_type, entity_id=entity_id, run_at=run_at)
-    db.session.add(job)
-    db.session.flush()
-    return job
 
 
 def publish(entity: object, when: datetime | None = None):
