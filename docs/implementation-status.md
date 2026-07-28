@@ -462,4 +462,4 @@
   - scheduled projects publish idempotently through the worker
   - contact notification jobs are delegated to the mailer path
 - Review result: self-review completed against Task 13 and the design specification. SQLite exercises the lease state transitions; PostgreSQL `SKIP LOCKED` remains covered by the SQLAlchemy claim query shape and should be verified against PostgreSQL before production.
-- Commit SHA: pending
+- Commit SHA: `d2c6537`
