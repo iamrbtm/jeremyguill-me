@@ -436,4 +436,4 @@
   - email failures leave the submission stored with failed delivery status and a safe error code
   - admin contact state transitions require a passkey session
 - Review result: self-review completed against Task 12 and the design specification. SMTP settings are configuration-backed and no real email was sent during tests.
-- Commit SHA: pending
+- Commit SHA: `f5dabe2`
