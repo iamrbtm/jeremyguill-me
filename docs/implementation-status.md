@@ -402,4 +402,4 @@
   - old project slug redirects return 308 and redirect chains collapse to one hop
   - robots.txt advertises the deterministic sitemap URL
 - Review result: self-review completed against Task 11 and the design specification. SEO output is deterministic and does not depend on AI availability.
-- Commit SHA: pending
+- Commit SHA: `b1307bb`
