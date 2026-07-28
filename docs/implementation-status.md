@@ -81,4 +81,4 @@
 - Limitation: PostgreSQL server tooling (`initdb`, `pg_ctl`, `psql`) is not available in this workspace yet, so Task 2 migration upgrade/downgrade was smoke-tested against SQLite only. PostgreSQL migration verification remains required before production readiness.
 - Implementation note: `Job` is stored in `src/portfolio/jobs/models.py` to preserve the domain-module boundary even though the Task 2 file list omitted that path while requiring a `Job` model.
 - Review result: self-review completed against Task 2 and the design specification. No secrets or private reference assets are staged intentionally.
-- Commit SHA: pending local commit.
+- Commit SHA: `91cd21c`
