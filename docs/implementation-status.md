@@ -269,3 +269,39 @@
   - media referenced by project hero fields cannot be deleted
 - Review result: self-review completed against Task 7 and the design specification. The approved portrait treatment step still requires an approved image-editing tool/source workflow before production media is finalized.
 - Commit SHA: `e717491`
+
+## Task 8: Admin Dashboard and Structured Content Management
+
+- Deliverable: passkey-protected admin dashboard, ordered project listing, explicit project edit form, revision-aware draft saves, optimistic concurrency conflict response, archive/restore/sort actions, signed 30-minute previews tied to the active admin session, and admin CSS/JS bundle entrypoint.
+- Affected files:
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/admin/forms.py`
+  - `src/portfolio/admin/routes.py`
+  - `src/portfolio/admin/view_models.py`
+  - `src/portfolio/auth/routes.py`
+  - `src/portfolio/static_src/css/admin.css`
+  - `src/portfolio/static_src/ts/admin.ts`
+  - `src/portfolio/templates/admin/base.html`
+  - `src/portfolio/templates/admin/content/edit.html`
+  - `src/portfolio/templates/admin/content/list.html`
+  - `src/portfolio/templates/admin/content/preview.html`
+  - `src/portfolio/templates/admin/dashboard.html`
+  - `src/portfolio/templates/admin/media/edit.html`
+  - `tests/integration/admin/test_content_crud.py`
+  - `tests/integration/admin/test_preview.py`
+  - `vite.config.ts`
+- Tests and verification:
+  - `uv run pytest tests/integration/admin -v`: passed, 11 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 60 tests
+  - `npm run build`: passed
+- Security controls verified:
+  - `/admin` redirects unauthenticated users to `/admin/sign-in`
+  - project edit POSTs accept only explicit form fields and reject validation errors with 422
+  - stale project edits return 409 instead of overwriting newer content
+  - signed previews include entity type, entity ID, version, admin session ID, and expiry
+  - preview responses set `X-Robots-Tag: noindex, nofollow`
+  - previews reject expired, mismatched-session, and stale-version tokens
+  - admin forms include CSRF token fields for production CSRF enforcement
+- Review result: self-review completed against Task 8 and the design specification. Blog, experience, profile, and settings endpoints are present as protected list/placeholder pages; richer editing for those domains remains for later CMS tasks.
+- Commit SHA: pending

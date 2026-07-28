@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
+from flask import Blueprint, jsonify, render_template, request, session
 
 from .services import (
     InvalidChallenge,
@@ -41,10 +41,3 @@ def finish_passkey_authentication():
     session.clear()
     session["admin_session_id"] = str(admin_session.id)
     return "", 204
-
-
-@auth_bp.get("")
-def admin_root():
-    if "admin_session_id" not in session:
-        return redirect(url_for("auth.sign_in"))
-    return render_template("admin/security.html")

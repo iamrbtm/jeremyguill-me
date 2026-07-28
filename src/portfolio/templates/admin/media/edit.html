@@ -9,6 +9,7 @@
     <main>
       <h1>Edit Media</h1>
       <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label>
           Alt text
           <input name="alt_text" value="{{ asset.alt_text }}" maxlength="240" required>

@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit {{ entity.title }}{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">{{ content_type|title }}</p>
+    <h1>Edit {{ entity.title }}</h1>
+    {% if conflict %}
+      <div class="alert" role="alert">Content changed while you were editing. Review the latest record before saving again.</div>
+    {% endif %}
+    {% if form.errors %}
+      <div class="alert" role="alert">
+        {% for messages in form.errors.values() %}
+          {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
+    <p><a href="{{ url_for('admin.project_preview_url', project_id=entity.id) }}">Open signed preview</a></p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="version" value="{{ form.version }}">
+      <label>Title <input name="title" value="{{ form.title }}" required></label>
+      <label>Slug <input name="slug" value="{{ form.slug }}" required></label>
+      <label>Summary <textarea name="summary" maxlength="320">{{ form.summary }}</textarea></label>
+      <label>Markdown <textarea name="source_markdown" rows="16">{{ form.source_markdown }}</textarea></label>
+      <button type="submit">Save draft</button>
+    </form>
+    <form method="post" action="{{ url_for('admin.archive_project', project_id=entity.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit">Archive</button>
+    </form>
+    <form method="post" action="{{ url_for('admin.restore_project', project_id=entity.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit">Restore to draft</button>
+    </form>
+  </section>
+{% endblock %}

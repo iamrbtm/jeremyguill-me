@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Admin{% endblock %} - Jeremy Guill</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/admin.css') }}">
+  </head>
+  <body class="admin-shell">
+    <header class="admin-header">
+      <a href="{{ url_for('admin.dashboard') }}">Portfolio Admin</a>
+      <nav aria-label="Admin">
+        <a href="{{ url_for('admin.projects') }}">Projects</a>
+        <a href="{{ url_for('admin.blog') }}">Blog</a>
+        <a href="{{ url_for('admin.experience') }}">Experience</a>
+        <a href="{{ url_for('media.index') }}">Media</a>
+        <a href="{{ url_for('admin.profile') }}">Profile</a>
+        <a href="{{ url_for('admin.settings') }}">Settings</a>
+      </nav>
+    </header>
+    <main class="admin-main">
+      {% block content %}{% endblock %}
+    </main>
+    <script type="module" src="{{ url_for('static', filename='assets/admin.js') }}"></script>
+  </body>
+</html>

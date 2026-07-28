@@ -35,11 +35,13 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
 
     import_models()
 
+    from .admin.routes import admin_bp
     from .auth.routes import auth_bp
     from .media.routes import media_bp
     from .public.routes import public_bp
 
     app.register_blueprint(public_bp)
+    app.register_blueprint(admin_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(media_bp)
 

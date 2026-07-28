@@ -8,6 +8,7 @@ export default defineConfig({
       input: {
         site: "src/portfolio/static_src/ts/site.ts",
         passkeys: "src/portfolio/static_src/ts/passkeys.ts",
+        admin: "src/portfolio/static_src/ts/admin.ts",
       },
       output: {
         entryFileNames: "assets/[name].js",

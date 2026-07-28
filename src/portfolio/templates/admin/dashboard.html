@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">Single-owner CMS</p>
+    <h1>Dashboard</h1>
+    <div class="metric-grid">
+      <article><strong>{{ view.project_count }}</strong><span>Projects</span></article>
+      <article><strong>{{ view.blog_count }}</strong><span>Blog posts</span></article>
+      <article><strong>{{ view.experience_count }}</strong><span>Experience entries</span></article>
+    </div>
+  </section>
+{% endblock %}

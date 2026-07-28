@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ content_type|title }}{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">Content</p>
+    <h1>{{ content_type|title }}</h1>
+    {% if items %}
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>State</th>
+            <th>Version</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+            <tr>
+              <td>
+                {% if content_type == "projects" %}
+                  <a href="{{ url_for('admin.edit_project', project_id=item.id) }}">{{ item.title }}</a>
+                {% else %}
+                  {{ item.title if item.title is defined else item.role }}
+                {% endif %}
+              </td>
+              <td>{{ item.state.value if item.state is defined else "visible" }}</td>
+              <td>{{ item.version }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No {{ content_type }} records yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}
