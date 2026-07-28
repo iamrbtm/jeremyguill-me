@@ -13,7 +13,7 @@ def test_compose_keeps_database_private():
 def test_compose_binds_web_to_localhost_only():
     compose = Path("compose.yaml").read_text()
 
-    assert '"127.0.0.1:8000:8000"' in compose
+    assert '"127.0.0.1:7777:8000"' in compose
 
 
 def test_dockerignore_excludes_private_reference_assets():
