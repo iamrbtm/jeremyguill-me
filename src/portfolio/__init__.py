@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
 from importlib import import_module
 
 from flask import Flask
@@ -16,6 +17,10 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
         SQLALCHEMY_DATABASE_URI=settings.database_url,
         PUBLIC_ORIGIN=settings.public_origin,
         WEBAUTHN_RP_ID=settings.rp_id,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Strict",
+        SESSION_COOKIE_SECURE=settings.app_env == "production",
+        PERMANENT_SESSION_LIFETIME=timedelta(hours=1),
     )
     if config:
         app.config.update(config)
@@ -29,9 +34,15 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
 
     import_models()
 
+    from .auth.routes import auth_bp
     from .public.routes import public_bp
 
     app.register_blueprint(public_bp)
+    app.register_blueprint(auth_bp)
+
+    from .auth.cli import admin_cli
+
+    app.cli.add_command(admin_cli)
 
     register_error_handlers(app)
 
