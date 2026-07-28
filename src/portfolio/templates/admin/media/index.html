@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Media Library</title>
+  </head>
+  <body>
+    <main>
+      <h1>Media Library</h1>
+      {% if assets %}
+        <ul>
+          {% for asset in assets %}
+            <li>
+              <a href="{{ url_for('media.edit', asset_id=asset.id) }}">{{ asset.original_filename }}</a>
+              <span>{{ asset.mime_type }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No media assets have been uploaded yet.</p>
+      {% endif %}
+    </main>
+  </body>
+</html>

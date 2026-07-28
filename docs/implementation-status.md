@@ -241,3 +241,31 @@
 - Runtime fix: entrypoint uses `flask --app portfolio`, static copying is idempotent for existing volumes, and local Flask serves stable Vite assets from `/app/bundled_static`.
 - Review result: self-review completed against Task 6 and the design specification. Blog navigation hides unless a published blog post exists; draft projects return 404; public claims are sourced from `reference/Resume2026.md`.
 - Commit SHA: `4c0cf85`
+
+## Task 7: Portrait Processing and Media Library
+
+- Deliverable: hardened image upload validation, private original storage, generated public WebP variants, atomic staging/cleanup behavior, protected deletion for referenced media, and minimal passkey-protected admin media templates.
+- Affected files:
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/media/routes.py`
+  - `src/portfolio/media/services.py`
+  - `src/portfolio/media/validation.py`
+  - `src/portfolio/media/variants.py`
+  - `src/portfolio/templates/admin/media/edit.html`
+  - `src/portfolio/templates/admin/media/index.html`
+  - `tests/integration/media/test_media_lifecycle.py`
+  - `tests/unit/media/test_validation.py`
+- Tests and verification:
+  - `uv run pytest tests/unit/media tests/integration/media -v`: passed, 11 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 49 tests
+  - `npm run build`: passed
+- Security controls verified:
+  - active/executable upload filenames such as `.php`, `.svg`, and `.html` are rejected
+  - declared content type must match detected file signature
+  - uploads over 15 MB and oversized decoded dimensions are rejected
+  - originals are stored under private media paths and responsive variants are regenerated as public WebP files
+  - failed variant generation removes pending filesystem and database state
+  - media referenced by project hero fields cannot be deleted
+- Review result: self-review completed against Task 7 and the design specification. The approved portrait treatment step still requires an approved image-editing tool/source workflow before production media is finalized.
+- Commit SHA: pending
