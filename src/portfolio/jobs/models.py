@@ -12,7 +12,10 @@ from portfolio.extensions import db
 
 class Job(TimestampMixin, db.Model):
     __tablename__ = "jobs"
-    __table_args__ = (UniqueConstraint("kind", "entity_type", "entity_id", "state"),)
+    __table_args__ = (
+        UniqueConstraint("kind", "entity_type", "entity_id", "state"),
+        {"sqlite_autoincrement": False},
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     kind: Mapped[str] = mapped_column(String(80), nullable=False)

@@ -157,3 +157,30 @@
   - Real WebAuthn cryptographic verification remains to be completed before production acceptance.
   - Screenshots are not available yet because public/admin interfaces are skeletal.
 - Next task: Task 5 content services, sanitization, revisions, and publishing.
+
+## Task 5: Content Services, Sanitization, Revisions, and Publishing
+
+- Deliverable: safe Markdown rendering, content command schema, revision creation and rollback, draft saving, immediate/scheduled publishing, idempotent publish job enqueue, and slug redirect creation.
+- Affected files:
+  - `src/portfolio/content/rendering.py`
+  - `src/portfolio/content/revisions.py`
+  - `src/portfolio/content/schemas.py`
+  - `src/portfolio/content/services.py`
+  - `src/portfolio/jobs/models.py`
+  - `tests/integration/content/test_revision_rollback.py`
+  - `tests/unit/content/test_publishing.py`
+  - `tests/unit/content/test_rendering.py`
+- Tests and verification:
+  - `uv run pytest tests/unit/content tests/integration/content -v`: passed, 11 tests
+  - `uv run pytest -v`: passed, 25 tests
+  - `uv run ruff check .`: passed
+  - `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task5-migration.sqlite" uv run flask --app portfolio db upgrade`: passed
+  - `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task5-migration.sqlite" uv run flask --app portfolio db downgrade base`: passed
+  - second `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task5-migration.sqlite" uv run flask --app portfolio db upgrade`: passed
+- Security controls verified:
+  - raw HTML is stripped before Markdown rendering
+  - unsafe URL schemes including `javascript:`, `data:`, and `vbscript:` are removed
+  - rendered HTML is sanitized through an explicit tag/attribute allowlist
+  - external links receive `rel="noopener noreferrer"`
+- Review result: self-review completed against Task 5 and the design specification. AI output and editor input will consume the same sanitizer in later tasks.
+- Commit SHA: pending local commit.
