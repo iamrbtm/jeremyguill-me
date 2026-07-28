@@ -1,0 +1,19 @@
+{
+  "name": "jeremyguill-portfolio-assets",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "@simplewebauthn/browser": "^13.2.2",
+    "@toast-ui/editor": "^3.2.2"
+  },
+  "overrides": {
+    "dompurify": "^3.4.12"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "^7.0.0"
+  }
+}
