@@ -5,5 +5,25 @@
   <p class="eyebrow">Contact</p>
   <h1>Talk about a practical system.</h1>
   <p>Email Jeremy at <a href="mailto:{{ view.profile.email or 'rbtm2006@me.com' }}">{{ view.profile.email or "rbtm2006@me.com" }}</a>.</p>
+  {% if form and form.errors %}
+    <div class="alert" role="alert">
+      {% for messages in form.errors.values() %}
+        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+      {% endfor %}
+    </div>
+  {% endif %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="form_started_at" value="{{ form.command.form_started_at if form else '' }}" data-form-started-at>
+    <label>Name <input name="name" value="{{ form.command.name if form else '' }}" required></label>
+    <label>Email <input name="email" type="email" value="{{ form.command.email if form else '' }}" required></label>
+    <label>Subject <input name="subject" value="{{ form.command.subject if form else '' }}" required></label>
+    <label class="visually-hidden">Company website <input name="company_website" tabindex="-1" autocomplete="off"></label>
+    <label>Message <textarea name="message" rows="8" maxlength="5000" required>{{ form.command.message if form else '' }}</textarea></label>
+    <button class="button" type="submit">Send message</button>
+  </form>
 </section>
+<script>
+  document.querySelector('[data-form-started-at]').value = String(Date.now() / 1000);
+</script>
 {% endblock %}

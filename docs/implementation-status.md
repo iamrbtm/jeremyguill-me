@@ -403,3 +403,37 @@
   - robots.txt advertises the deterministic sitemap URL
 - Review result: self-review completed against Task 11 and the design specification. SEO output is deterministic and does not depend on AI availability.
 - Commit SHA: `b1307bb`
+
+## Task 12: Blog, Resume, and Contact Workflow
+
+- Deliverable: published blog index/detail routes, draft-private blog behavior, resume redirect, contact form validation, honeypot/timing spam discard, persistence-before-notification contact handling, configurable SMTP notification service, admin contact list/detail/state updates, and email settings placeholder.
+- Affected files:
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/contact/forms.py`
+  - `src/portfolio/contact/mailer.py`
+  - `src/portfolio/contact/routes.py`
+  - `src/portfolio/contact/services.py`
+  - `src/portfolio/public/blog_routes.py`
+  - `src/portfolio/templates/admin/contact/detail.html`
+  - `src/portfolio/templates/admin/contact/index.html`
+  - `src/portfolio/templates/admin/settings/email.html`
+  - `src/portfolio/templates/public/blog_index.html`
+  - `src/portfolio/templates/public/blog_post.html`
+  - `src/portfolio/templates/public/contact.html`
+  - `tests/integration/contact/test_contact_flow.py`
+  - `tests/integration/public/test_blog.py`
+  - `tests/security/test_contact_abuse.py`
+- Tests and verification:
+  - `uv run pytest tests/integration/public/test_blog.py tests/integration/contact tests/security/test_contact_abuse.py -v`: passed, 11 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 97 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Security/privacy controls verified:
+  - draft blog posts remain private
+  - invalid contact payloads return 422 without persistence
+  - honeypot and too-fast submissions redirect like normal submissions but are not stored
+  - valid submissions are committed before delivery is attempted
+  - email failures leave the submission stored with failed delivery status and a safe error code
+  - admin contact state transitions require a passkey session
+- Review result: self-review completed against Task 12 and the design specification. SMTP settings are configuration-backed and no real email was sent during tests.
+- Commit SHA: pending

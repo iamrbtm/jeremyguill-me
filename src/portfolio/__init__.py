@@ -40,12 +40,16 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
 
     from .admin.routes import admin_bp
     from .auth.routes import auth_bp
+    from .contact.routes import contact_bp
     from .integrations.routes import integrations_bp
     from .media.routes import media_bp
+    from .public.blog_routes import blog_bp
     from .public.routes import public_bp
     from .seo.routes import seo_bp
 
     app.register_blueprint(public_bp)
+    app.register_blueprint(blog_bp)
+    app.register_blueprint(contact_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(integrations_bp)
