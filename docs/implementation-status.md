@@ -128,7 +128,7 @@
   - second `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task4-migration.sqlite" uv run flask --app portfolio db upgrade`: passed
 - Limitation: route tests use deterministic credential dictionaries to verify origin, RP ID, user verification, and single-use challenge behavior. Real WebAuthn cryptographic attestation/assertion verification and browser ceremony coverage remain required before production acceptance.
 - Review result: self-review completed against Task 4. No username, password, TOTP, SMS, email recovery, or registration route was added.
-- Commit SHA: pending local commit.
+- Commit SHA: `8e67abc`
 
 ## Checkpoint After Task 4
 
@@ -136,7 +136,7 @@
   - Task 1: `0d278c3`
   - Task 2: `91cd21c`
   - Task 3: `c261d14`
-  - Task 4: pending local commit
+  - Task 4: `8e67abc`
 - Verification commands run:
   - `uv sync --locked`
   - `npm ci`
