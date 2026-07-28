@@ -304,4 +304,4 @@
   - previews reject expired, mismatched-session, and stale-version tokens
   - admin forms include CSRF token fields for production CSRF enforcement
 - Review result: self-review completed against Task 8 and the design specification. Blog, experience, profile, and settings endpoints are present as protected list/placeholder pages; richer editing for those domains remains for later CMS tasks.
-- Commit SHA: pending
+- Commit SHA: `6cb21d7`
