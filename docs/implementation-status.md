@@ -50,4 +50,4 @@
   - `uv run ruff check .`: passed
 - Dependency decision: added an npm override for `dompurify@3.4.12` because the planned `@toast-ui/editor@3.2.2` dependency resolved to vulnerable `dompurify@2.5.9`. This preserves the planned editor package while removing known DOMPurify advisories.
 - Review result: self-review completed against Task 1 and the design specification. No secrets or private reference assets are staged intentionally.
-- Commit SHA: pending local commit.
+- Commit SHA: `0d278c3`
