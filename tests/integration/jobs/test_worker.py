@@ -11,7 +11,7 @@ from portfolio.content.models import Project, utcnow
 from portfolio.extensions import db
 from portfolio.jobs.models import Job
 from portfolio.jobs.services import enqueue_unique
-from portfolio.worker import run_once
+from portfolio.worker import main, run_once
 
 
 def test_run_once_publishes_scheduled_project(db_session):
@@ -76,3 +76,19 @@ def test_run_once_is_graceful_with_no_jobs(db_session):
     result = run_once("worker-a")
 
     assert result.processed == 0
+
+
+def test_worker_main_creates_application_context(monkeypatch: pytest.MonkeyPatch):
+    calls: list[str] = []
+
+    def once(worker_id: str):
+        calls.append(worker_id)
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr("portfolio.worker.run_once", once)
+    monkeypatch.setattr("portfolio.worker.time.sleep", lambda seconds: None)
+
+    with pytest.raises(KeyboardInterrupt):
+        main()
+
+    assert calls == ["worker-main"]

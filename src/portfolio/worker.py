@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 
+from portfolio import create_app
 from portfolio.jobs.handlers import handle_job
 from portfolio.jobs.services import WorkerResult, claim_due_jobs, fail_job, succeed_job
 
@@ -23,9 +24,11 @@ def run_once(worker_id: str, limit: int = 20) -> WorkerResult:
 
 
 def main() -> None:
-    while True:
-        run_once("worker-main")
-        time.sleep(60)
+    app = create_app()
+    with app.app_context():
+        while True:
+            run_once("worker-main")
+            time.sleep(60)
 
 
 if __name__ == "__main__":

@@ -451,7 +451,7 @@
 - Tests and verification:
   - `uv run pytest tests/unit/jobs tests/integration/jobs -v`: passed, 9 tests
   - `uv run ruff check .`: passed
-  - `uv run pytest -v`: passed, 106 tests
+  - `uv run pytest -v`: passed, 107 tests
   - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
 - Reliability controls verified:
   - active pending/running jobs are not duplicated
@@ -461,5 +461,6 @@
   - failed jobs retry with bounded backoff and move to `failed` after five attempts
   - scheduled projects publish idempotently through the worker
   - contact notification jobs are delegated to the mailer path
+  - `python -m portfolio.worker` creates an application context before database work
 - Review result: self-review completed against Task 13 and the design specification. SQLite exercises the lease state transitions; PostgreSQL `SKIP LOCKED` remains covered by the SQLAlchemy claim query shape and should be verified against PostgreSQL before production.
 - Commit SHA: `d2c6537`
