@@ -43,12 +43,14 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
     from .integrations.routes import integrations_bp
     from .media.routes import media_bp
     from .public.routes import public_bp
+    from .seo.routes import seo_bp
 
     app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(integrations_bp)
     app.register_blueprint(media_bp)
+    app.register_blueprint(seo_bp)
 
     from .auth.cli import admin_cli
     from .content.seed import content_cli

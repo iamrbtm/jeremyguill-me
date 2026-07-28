@@ -373,3 +373,33 @@
   - acceptance returns 409 when the current source hash differs from the suggestion source hash
 - Review result: self-review completed against Task 10 and the design specification. Tests use mocked NVIDIA endpoints only; no real external NVIDIA calls were made.
 - Commit SHA: `84e20df`
+
+## Task 11: Deterministic SEO, AI Suggestions, and Redirects
+
+- Deliverable: deterministic metadata and JSON-LD builders, public metadata include, canonical public page metadata, sitemap and robots routes/templates, and permanent redirect resolution with redirect-chain collapse.
+- Affected files:
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/public/routes.py`
+  - `src/portfolio/seo/routes.py`
+  - `src/portfolio/seo/schemas.py`
+  - `src/portfolio/seo/services.py`
+  - `src/portfolio/templates/components/metadata.html`
+  - `src/portfolio/templates/public/base.html`
+  - `src/portfolio/templates/robots.txt`
+  - `src/portfolio/templates/sitemap.xml`
+  - `tests/integration/seo/test_sitemap_and_redirects.py`
+  - `tests/unit/seo/test_metadata.py`
+- Tests and verification:
+  - `uv run pytest tests/unit/seo tests/integration/seo -v`: passed, 9 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 86 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Security/SEO controls verified:
+  - canonical URLs are built from `PUBLIC_ORIGIN`
+  - unpublished metadata resolves to `noindex,nofollow`
+  - project detail pages render canonical metadata and JSON-LD
+  - sitemap includes only published canonical project URLs plus stable public pages
+  - old project slug redirects return 308 and redirect chains collapse to one hop
+  - robots.txt advertises the deterministic sitemap URL
+- Review result: self-review completed against Task 11 and the design specification. SEO output is deterministic and does not depend on AI availability.
+- Commit SHA: pending
