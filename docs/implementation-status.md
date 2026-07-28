@@ -205,4 +205,4 @@
   - `docker build -t jeremyguill-portfolio:local .`: passed
 - Limitation: local Compose currently uses development environment defaults so it can validate and build without production secret files. Task 15 must replace this with production secret-file handling before deployment.
 - Review result: self-review completed. The database service exposes no host ports, the web service binds to `127.0.0.1:8000`, private `reference/` assets are excluded from Docker build context, and the runtime image runs as the non-root `portfolio` user.
-- Commit SHA: pending local commit.
+- Commit SHA: `06cc837`
