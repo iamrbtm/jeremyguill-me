@@ -11,7 +11,7 @@ services:
       RATELIMIT_STORAGE_URI: ${RATELIMIT_STORAGE_URI:-memory://}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-1}
       SEED_INITIAL_CONTENT: ${SEED_INITIAL_CONTENT:-1}
-      STATIC_FOLDER: ${STATIC_FOLDER:-/app/var/static}
+      STATIC_FOLDER: ${STATIC_FOLDER:-/app/bundled_static}
     ports:
       - "127.0.0.1:7777:8000"
     depends_on:
