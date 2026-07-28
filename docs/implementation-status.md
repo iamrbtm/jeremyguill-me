@@ -538,4 +538,4 @@
   - backup script uses `pg_dump --format=custom`, archives media, encrypts with `age` when a recipient is present, and refuses restore without explicit confirmation
   - Nginx config caps uploads at 15 MB, serves `/static/` and `/media/`, denies dotfiles, forwards proxy headers, and applies HSTS only on HTTPS
 - Review result: self-review completed against Task 15 and the design specification. Local Compose still uses development password defaults for repeatable local validation; deployment docs call out production secret/environment requirements.
-- Commit SHA: pending
+- Commit SHA: `7c1c562`
