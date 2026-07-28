@@ -464,3 +464,44 @@
   - `python -m portfolio.worker` creates an application context before database work
 - Review result: self-review completed against Task 13 and the design specification. SQLite exercises the lease state transitions; PostgreSQL `SKIP LOCKED` remains covered by the SQLAlchemy claim query shape and should be verified against PostgreSQL before production.
 - Commit SHA: `d2c6537`
+
+## Task 14: Security Headers, Request Hardening, and Regression Suite
+
+- Deliverable: global restrictive security headers, no-store auth responses, safe local redirect validation, structured secret redaction filter, contact form CSP cleanup, expanded security regression suite, clean dependency audit, and mypy static-check configuration for the current dynamic Flask/SQLAlchemy boundary.
+- Affected files:
+  - `pyproject.toml`
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/public/routes.py`
+  - `src/portfolio/security/headers.py`
+  - `src/portfolio/security/logging.py`
+  - `src/portfolio/security/validation.py`
+  - `src/portfolio/templates/public/contact.html`
+  - `tests/security/test_csrf.py`
+  - `tests/security/test_headers.py`
+  - `tests/security/test_injection.py`
+  - `tests/security/test_paths_and_redirects.py`
+  - `tests/security/test_secret_redaction.py`
+  - `tests/security/test_xss.py`
+  - `uv.lock`
+- Tests and verification:
+  - `uv run pytest tests/security -v`: passed, 15 tests
+  - `uv run pip-audit`: passed, no known vulnerabilities found for audited dependencies
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed, 59 source files
+  - `uv run pytest -v`: passed, 117 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Dependency updates:
+  - `cryptography` locked to `48.0.1`
+  - `Pillow` locked to `12.3.0`
+  - `pyOpenSSL` locked to `26.2.0`
+  - `pytest` locked to `9.1.1`
+- Security controls verified:
+  - Content Security Policy, `nosniff`, referrer policy, and permissions policy are present
+  - auth pages return `Cache-Control: no-store`
+  - SQL injection payloads are treated as data and leave schema intact
+  - stored external redirects are rejected instead of followed
+  - project summary output is escaped
+  - CSRF protection rejects public POSTs when enabled
+  - authorization/API key/token text is redacted from structured logs
+- Review result: self-review completed against Task 14 and the design specification. Production HSTS remains an Nginx/HTTPS deployment concern for Task 15.
+- Commit SHA: pending

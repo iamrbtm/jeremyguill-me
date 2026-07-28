@@ -36,6 +36,10 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
     limiter.init_app(app)
     migrate.init_app(app, db)
 
+    from .security.headers import apply_security_headers
+
+    app.after_request(apply_security_headers)
+
     import_models()
 
     from .admin.routes import admin_bp

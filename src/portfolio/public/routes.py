@@ -5,6 +5,7 @@ from portfolio.content.enums import PublicationState
 from portfolio.content.models import Project
 from portfolio.extensions import db
 from portfolio.public.view_models import build_home_view
+from portfolio.security.validation import safe_redirect_target
 from portfolio.seo.schemas import SeoPage
 from portfolio.seo.services import build_metadata, resolve_redirect_chain
 
@@ -39,8 +40,9 @@ def project_detail(slug: str):
     ).scalar_one_or_none()
     if project is None:
         redirect_target = resolve_redirect_chain(f"/work/{slug}")
-        if redirect_target:
-            return redirect(redirect_target, code=308)
+        safe_target = safe_redirect_target(redirect_target or "")
+        if safe_target:
+            return redirect(safe_target, code=308)
         abort(404)
     metadata = build_metadata(
         SeoPage(
@@ -71,6 +73,8 @@ def experience():
 
 @public_bp.get("/contact")
 def contact():
+    import time
+
     metadata = build_metadata(
         SeoPage(
             title="Contact | Jeremy Guill",
@@ -79,4 +83,9 @@ def contact():
             is_published=True,
         )
     )
-    return render_template("public/contact.html", view=build_home_view(), metadata=metadata)
+    return render_template(
+        "public/contact.html",
+        view=build_home_view(),
+        metadata=metadata,
+        form_started_at=str(time.time()),
+    )
