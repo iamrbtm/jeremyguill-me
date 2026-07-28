@@ -504,4 +504,4 @@
   - CSRF protection rejects public POSTs when enabled
   - authorization/API key/token text is redacted from structured logs
 - Review result: self-review completed against Task 14 and the design specification. Production HSTS remains an Nginx/HTTPS deployment concern for Task 15.
-- Commit SHA: pending
+- Commit SHA: `e5be8ed`
