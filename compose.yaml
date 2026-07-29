@@ -13,7 +13,7 @@ services:
       SEED_INITIAL_CONTENT: ${SEED_INITIAL_CONTENT:-1}
       STATIC_FOLDER: ${STATIC_FOLDER:-/app/bundled_static}
     ports:
-      - "127.0.0.1:7777:8000"
+      - "7777:7777"
     depends_on:
       db:
         condition: service_healthy
@@ -24,7 +24,7 @@ services:
       - static_data:/app/var/static
       - media_data:/app/var/media
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=5)"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7777/health/live', timeout=5)"]
       interval: 30s
       timeout: 10s
       retries: 3

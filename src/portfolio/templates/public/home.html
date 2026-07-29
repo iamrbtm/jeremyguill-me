@@ -1,34 +1,55 @@
 {% extends "public/base.html" %}
 {% block title %}Jeremy Guill | Practical Software Builder{% endblock %}
 {% block content %}
-<section class="hero">
-  <div class="hero-copy">
-    <p class="eyebrow">Software builder · implementation support · database workflows</p>
-    <h1>{{ view.profile.headline }}</h1>
-    <p>{{ view.profile.summary or "I design and build practical systems that help people replace manual work with dependable workflows." }}</p>
-    <div class="hero-actions">
-      <a class="button" href="#work">See selected work</a>
-      <a class="text-link" href="/contact">Start a conversation</a>
+<section id="header" class="header mark-hero">
+  <div class="container">
+    <div class="mark-hero__copy reveal">
+      <h1>{{ view.profile.headline }}</h1>
+      <p>{{ view.profile.summary or "I design and build practical systems that help people replace manual work with dependable workflows." }}</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#about">Discover</a>
+        <a class="button button-outline" href="/contact">Contact me</a>
+      </div>
     </div>
   </div>
-  <div class="hero-panel" aria-label="Portrait placeholder">
-    <span>Jeremy Guill</span>
+</section>
+
+<section id="about" class="about-band bg-gray">
+  <div class="container about-grid">
+    <div class="about-intro reveal">
+      <h2>Hi there, I'm Jeremy.</h2>
+      <p>I create dependable software, databases, and workflow tools for real operations. The work starts with listening, then turns messy process details into systems people can actually use.</p>
+    </div>
+    <div class="timeline-column reveal">
+      {% for item in view.experience[:2] %}
+        <article class="mini-timeline">
+          <p class="time">{{ item.start_date or "Current" }}{% if item.end_date %} - {{ item.end_date }}{% endif %}</p>
+          <h3>{{ item.role }}</h3>
+          <p>{{ item.organization }}</p>
+        </article>
+      {% endfor %}
+    </div>
+    <div class="timeline-column reveal">
+      {% for item in view.experience[2:4] %}
+        <article class="mini-timeline">
+          <p class="time">{{ item.start_date or "Earlier" }}{% if item.end_date %} - {{ item.end_date }}{% endif %}</p>
+          <h3>{{ item.role }}</h3>
+          <p>{{ item.organization }}</p>
+        </article>
+      {% endfor %}
+    </div>
   </div>
 </section>
 
-<section id="about" class="section-grid">
-  <p class="eyebrow">About</p>
-  <div>
-    <h2>Practical software for work that has to get done.</h2>
-    <p>Jeremy combines software development, database design, workflow automation, technical troubleshooting, and user support experience across education, transportation, small business, and media operations.</p>
+<section id="services" class="services-section">
+  <div class="container narrow-heading reveal">
+    <h2>Offered services</h2>
+    <p>Custom software and workflow support shaped around the real steps, records, handoffs, and people inside your operation.</p>
   </div>
-</section>
-
-<section class="section-grid">
-  <p class="eyebrow">Capabilities</p>
-  <div class="card-grid">
+  <div class="container service-grid">
     {% for capability in view.capabilities %}
-      <article class="capability-card">
+      <article class="service-card reveal">
+        <span class="service-icon" aria-hidden="true">{{ loop.index }}</span>
         <h3>{{ capability.title }}</h3>
         <p>{{ capability.body }}</p>
       </article>
@@ -36,34 +57,61 @@
   </div>
 </section>
 
-<section class="section-grid">
-  <p class="eyebrow">How I work</p>
-  <div>
-    <h2>Listen, map the real problem, build, train, and improve.</h2>
-    <p>The work starts with understanding the people and the process. From there Jeremy translates needs into requirements, builds a working solution, supports adoption, and keeps improving the system after launch.</p>
+<section class="split-detail">
+  <div class="split-detail__image" aria-label="Jeremy Guill portrait"></div>
+  <div class="split-detail__copy bg-gray reveal">
+    <div>
+      <h2>Why work with me</h2>
+      <p>I am a practical communicator who takes time to understand what is actually happening before proposing software. That makes the finished system easier to adopt and easier to support.</p>
+      <h3>Process first</h3>
+      <p>Map the current workflow, clarify the pain points, then build around the reality of the job instead of forcing people into generic tools.</p>
+      <h3>Reliable implementation</h3>
+      <p>Requirements, database structure, testing, rollout support, training, troubleshooting, and iteration stay connected from start to finish.</p>
+    </div>
   </div>
 </section>
 
-<section id="work" class="section-grid">
-  <p class="eyebrow">Selected work</p>
-  <div class="card-grid">
+<section id="work" class="projects-section">
+  <div class="container narrow-heading reveal">
+    <h2>Delivered projects</h2>
+    <p>Representative work across scheduling automation, lending-library systems, FileMaker workflows, and database-backed operations.</p>
+  </div>
+  <div class="container project-list">
     {% for project in view.featured_projects %}
-      {% include "components/project_card.html" %}
+      <article class="project-row reveal">
+        <a class="project-thumb project-thumb--{{ loop.index }}" href="/work/{{ project.slug }}" aria-label="Open {{ project.title }}"></a>
+        <p><strong>Project:</strong> {{ project.title }} <span>{{ project.summary }}</span> <a class="blue-link" href="/work/{{ project.slug }}">details</a></p>
+      </article>
     {% else %}
       <p>Selected projects will appear here after they are published.</p>
     {% endfor %}
   </div>
 </section>
 
-<section class="section-grid">
-  <p class="eyebrow">Experience</p>
-  <div>
-    {% for item in view.experience[:4] %}
-      <article class="timeline-item">
-        <h3>{{ item.role }} · {{ item.organization }}</h3>
-        <p>{{ item.summary }}</p>
+<section class="work-grid-section">
+  <div class="container work-grid">
+    {% for item in view.experience[:6] %}
+      <article class="work-card reveal">
+        <div class="work-card__image work-card__image--{{ loop.index }}"></div>
+        <p><strong>For:</strong> {{ item.organization }}, <strong>Role:</strong> {{ item.role }}. {{ item.summary }}</p>
       </article>
     {% endfor %}
+  </div>
+</section>
+
+<section class="testimonial-section">
+  <div class="container reveal">
+    <h2>A practical partner for complicated workflows.</h2>
+    <blockquote>“The goal is not flashy software. The goal is a dependable system that makes the work easier, clearer, and more repeatable.”</blockquote>
+    <p>{{ view.profile.display_name or "Jeremy Guill" }}{% if view.profile.location %} · {{ view.profile.location }}{% endif %}</p>
+  </div>
+</section>
+
+<section class="contact-cta bg-gray">
+  <div class="container reveal">
+    <h2>Have a workflow that needs a better system?</h2>
+    <p>Send the messy version. I can help turn it into a practical plan, a working tool, and a rollout people understand.</p>
+    <a class="button button-primary" href="/contact">Start a conversation</a>
   </div>
 </section>
 {% endblock %}

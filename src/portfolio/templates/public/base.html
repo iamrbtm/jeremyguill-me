@@ -10,11 +10,15 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     {% include "components/navigation.html" %}
-    <main id="main">
+    <main id="main" class="site-main">
       {% block content %}{% endblock %}
     </main>
     <footer class="site-footer">
-      <p>Jeremy Guill builds practical software for real-world operations.</p>
+      <div>
+        <p class="site-footer__title">Jeremy Guill</p>
+        <p>Practical software, database workflows, and implementation support for work that has to get done.</p>
+      </div>
+      <a class="footer-link" href="/contact">Start a conversation</a>
     </footer>
   </body>
 </html>
