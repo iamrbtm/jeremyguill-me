@@ -6,6 +6,7 @@ export default defineConfig({
     outDir: "src/portfolio/static",
     rollupOptions: {
       input: {
+        index: "src/portfolio/static_src/index.html",  // ADD THIS
         site: "src/portfolio/static_src/ts/site.ts",
         passkeys: "src/portfolio/static_src/ts/passkeys.ts",
       },
