@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: iamrbtm/iamrbtm.github.io
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DEPLOY_TOKEN }}
           path: pages-repo
 
       - name: Copy built files to Pages repo
