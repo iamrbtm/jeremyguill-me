@@ -1,0 +1,54 @@
+name: Build and Deploy Portfolio
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout jeremyguill-me repo
+        uses: actions/checkout@v4
+        with:
+          repository: iamrbtm/jeremyguill-me
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build portfolio
+        run: npm run build
+
+      - name: Checkout Pages repo
+        uses: actions/checkout@v4
+        with:
+          repository: iamrbtm/iamrbtm.github.io
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: pages-repo
+
+      - name: Copy built files to Pages repo
+        run: |
+          # Wipe everything except .git
+          cd pages-repo
+          find . -maxdepth 1 ! -name '.git' ! -name '.' -exec rm -rf {} +
+          cd ..
+          # Copy fresh build
+          cp -r src/portfolio/static/* pages-repo/
+
+      - name: Commit and push to Pages repo
+        run: |
+          cd pages-repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "Auto-deploy from jeremyguill-me build" || echo "No changes to commit"
+          git push
