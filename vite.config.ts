@@ -6,7 +6,7 @@ export default defineConfig({
     outDir: "src/portfolio/static",
     rollupOptions: {
       input: {
-        index: "src/portfolio/static_src/index.html",  // ADD THIS
+        index: "index.html",  // ← Changed from nested path
         site: "src/portfolio/static_src/ts/site.ts",
         passkeys: "src/portfolio/static_src/ts/passkeys.ts",
       },
