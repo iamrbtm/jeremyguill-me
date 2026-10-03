@@ -27,3 +27,12 @@ all-or-nothing: any error rolls back every file. Applying an unchanged file is a
 
 Trailing comments start with two spaces then `#`. Unknown fields are rejected; `slug`,
 `state` and `published_at` can never be set from a copy file.
+
+## Empty values and limits
+
+- `title` and `summary` cannot be empty for projects and blog posts.
+- For the optional project fields (`role`, `stack`, `year`, `result_headline`, `seo_title`,
+  `seo_description`) and blog `seo_*` fields, an empty value clears the field (stored as NULL).
+- Experience `summary` may be empty.
+- Values longer than the column limit are rejected, naming the field and limit.
+- Files may use CRLF line endings and a UTF-8 BOM; errors are prefixed with the file name.

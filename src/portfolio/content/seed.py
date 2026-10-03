@@ -61,16 +61,25 @@ def apply_copy_command(dry_run: bool, paths: tuple[str, ...]) -> None:
     files = [Path(p) for p in paths] or sorted(
         p for p in COPY_DIR.glob("*.md") if p.name.lower() != "readme.md"
     )
+    if not files:
+        click.echo("no copy files found")
+        return
+    current = ""
     try:
         for file in files:
-            click.echo(apply_copy_doc(parse_copy_file(file.read_text()), dry_run=dry_run))
+            current = file.name
+            text = file.read_text(encoding="utf-8-sig")
+            click.echo(apply_copy_doc(parse_copy_file(text), dry_run=dry_run))
         if dry_run:
             click.echo("dry run: no changes written")
         else:
             db.session.commit()
+    except UnicodeDecodeError as exc:
+        db.session.rollback()
+        raise click.ClickException(f"{current}: not valid UTF-8 ({exc.reason})") from exc
     except CopyError as exc:
         db.session.rollback()
-        raise click.ClickException(str(exc)) from exc
+        raise click.ClickException(f"{current}: {exc}") from exc
 
 
 def seed_initial_content() -> int:

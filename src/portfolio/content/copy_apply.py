@@ -32,6 +32,18 @@ FIELDS = {
     "blog": {"title", "summary", "seo_title", "seo_description"},
     "experience": {"summary"},
 }
+NULLABLE = {"role", "stack", "year", "result_headline", "seo_title", "seo_description"}
+# Column limits from the models; experience summary is unbounded Text.
+MAX_LENGTHS = {
+    "title": {"project": 160, "blog": 180},
+    "summary": {"project": 320, "blog": 320},
+    "role": {"project": 120},
+    "stack": {"project": 240},
+    "year": {"project": 20},
+    "result_headline": {"project": 240},
+    "seo_title": {"project": 180, "blog": 180},
+    "seo_description": {"project": 320, "blog": 320},
+}
 
 
 class CopyError(ValueError):
@@ -47,6 +59,7 @@ class CopyDoc:
 
 
 def parse_copy_file(text: str) -> CopyDoc:
+    text = text.replace("\r\n", "\n")
     if not text.startswith("---\n"):
         raise CopyError("missing front matter (file must start with '---')")
     head, sep, body = text[4:].partition("\n---\n")
@@ -68,8 +81,12 @@ def parse_copy_file(text: str) -> CopyDoc:
     unknown = set(meta) - FIELDS[kind]
     if unknown:
         raise CopyError(f"unknown field(s) for {kind}: {sorted(unknown)}")
-    if len(meta.get("summary", "")) > 320:
-        raise CopyError("summary must be 320 characters or fewer")
+    for name, value in meta.items():
+        if not value and name in {"title", "summary"} and kind != "experience":
+            raise CopyError(f"{name} must not be empty")
+        limit = MAX_LENGTHS.get(name, {}).get(kind)
+        if limit is not None and len(value) > limit:
+            raise CopyError(f"{name} must be {limit} characters or fewer (got {len(value)})")
     clean_body = body.strip("\n") + "\n" if body.strip() else ""
     return CopyDoc(kind=kind, match=match, fields=meta, body=clean_body)
 
@@ -96,7 +113,9 @@ def _find(doc: CopyDoc) -> Project | BlogPost | Experience:
 
 def apply_copy_doc(doc: CopyDoc, *, dry_run: bool = False) -> str:
     entity = _find(doc)
-    changes: dict[str, str] = dict(doc.fields)
+    changes: dict[str, str | None] = {
+        name: (value or None) if name in NULLABLE else value for name, value in doc.fields.items()
+    }
     if doc.body:
         changes["source_markdown"] = doc.body
         changes["rendered_html"] = (
@@ -105,7 +124,9 @@ def apply_copy_doc(doc: CopyDoc, *, dry_run: bool = False) -> str:
             else render_markdown(doc.body)
         )
     changed = [
-        name for name, value in changes.items() if (getattr(entity, name, None) or "") != value
+        name
+        for name, value in changes.items()
+        if (getattr(entity, name, None) or (None if name in NULLABLE else "")) != value
     ]
     if not changed:
         return f"{doc.kind} {doc.match}: unchanged"
