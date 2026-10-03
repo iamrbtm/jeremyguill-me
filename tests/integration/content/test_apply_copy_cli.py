@@ -229,7 +229,9 @@ def test_empty_body_keeps_existing_markdown(app, db_session, tmp_path):
 
 
 def test_blog_doc_renders_markdown(app, db_session, tmp_path):
-    db_session.add(BlogPost(title="Post", slug="post", summary="old", state=PublicationState.PUBLISHED))
+    db_session.add(
+        BlogPost(title="Post", slug="post", summary="old", state=PublicationState.PUBLISHED)
+    )
     db_session.commit()
     doc = "---\ntype: blog\nmatch: post\nsummary: New.\n---\n## Heading\n"
 
