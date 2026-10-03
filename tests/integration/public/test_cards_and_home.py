@@ -114,3 +114,18 @@ def test_homepage_has_no_testimonial_blockquote_attributed_to_owner(client):
 def test_empty_site_home_and_work_render(client):
     assert client.get("/").status_code == 200
     assert client.get("/work").status_code == 200
+
+
+def test_card_img_has_no_srcset_and_media_link_is_aria_hidden(client, db_session):
+    asset = _asset("Alt")
+    db_session.add_all([SiteProfile(), asset])
+    db_session.flush()
+    db_session.add(_project(hero_media_id=asset.id))
+    db_session.commit()
+
+    html = client.get("/").get_data(as_text=True)
+    work = html.split('id="work"')[1].split("</section>")[0]
+
+    assert "srcset" not in work and "hero_mobile" not in work
+    assert f"/media/public/{asset.id}/hero_desktop.webp" in work
+    assert 'class="project-card2__media" href="/work/p" aria-hidden="true" tabindex="-1"' in work

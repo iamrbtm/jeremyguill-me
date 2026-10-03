@@ -88,3 +88,5 @@
 .availability-pill { display: inline-block; margin: 0 0 1.2rem; padding: .35rem .9rem; border-radius: 999px; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .45); color: #fff; font-weight: 700; font-size: .85rem; }
 .principle-section { padding: 5rem 0; text-align: center; background: var(--gray); }
 .principle { max-width: 44rem; margin: 1.5rem auto 0; font-size: 1.35rem; line-height: 2rem; color: var(--ink); }
+.js .project-card2.reveal.is-visible { transition: opacity .7s ease, transform .2s ease, box-shadow .2s ease; }
+.js .project-card2.reveal.is-visible:hover, .js .project-card2.reveal.is-visible:focus-within { transform: translateY(-4px); box-shadow: 0 1.2rem 2.4rem rgba(0, 0, 0, .12); }
