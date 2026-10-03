@@ -110,3 +110,7 @@
 .project-pager a { display: block; text-decoration: none; font-weight: 700; color: var(--ink); max-width: 24rem; }
 .project-pager a span { display: block; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); }
 .project-pager a[rel="next"] { margin-left: auto; text-align: right; }
+
+.notice { padding: 1rem 1.2rem; border-left: 4px solid #1a7f4b; background: #eaf7f0; color: #14472b; border-radius: .3rem; margin: 1.5rem 0; }
+.notice p { margin: 0; }
+.contact-form { display: grid; gap: 1.1rem; margin-top: 1.5rem; }

@@ -34,10 +34,10 @@ def submit_contact():
         return render_template("public/contact.html", view=view, metadata=metadata, form=form), 422
     submission = services.save_submission(form.command)
     if submission is None:
-        return redirect(url_for("public.contact"))
+        return redirect(url_for("public.contact", sent=1))
     result = services.send_submission_notification(submission.id)
     services.mark_delivery_result(submission, result)
-    return redirect(url_for("public.contact"))
+    return redirect(url_for("public.contact", sent=1))
 
 
 @contact_bp.get("/admin/contact")

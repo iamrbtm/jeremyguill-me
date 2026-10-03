@@ -3,8 +3,16 @@
 {% block content %}
 <section class="page-section">
   <p class="eyebrow">Contact</p>
-  <h1>Connect about my work.</h1>
-  <p>If you are hiring, collaborating, or want to ask about a project in this portfolio, email Jeremy at <a href="mailto:{{ view.profile.email or 'rbtm2006@me.com' }}">{{ view.profile.email or "rbtm2006@me.com" }}</a>.</p>
+  <h1>Let's talk about your project or role.</h1>
+  <p class="lede">If you are hiring, collaborating, or want to ask about a project in this portfolio, send a note. I usually reply within two business days.</p>
+  {% set email_parts = (site.profile.email or '').split('@') %}
+  {% if email_parts|length == 2 %}
+    <p>Prefer email? <span class="obfuscated-email" data-email-user="{{ email_parts[0] }}" data-email-domain="{{ email_parts[1] }}">Use the form below.</span></p>
+  {% endif %}
+  {% if site.profile.linkedin_url %}<p>Or find me on <a href="{{ site.profile.linkedin_url }}" rel="noopener noreferrer me" target="_blank">LinkedIn</a>.</p>{% endif %}
+  {% if sent %}
+    <div class="notice" role="status" tabindex="-1"><p>Thanks, your message is on its way. I'll reply soon.</p></div>
+  {% endif %}
   {% if form and form.errors %}
     <div class="alert" role="alert">
       {% for messages in form.errors.values() %}
@@ -12,15 +20,15 @@
       {% endfor %}
     </div>
   {% endif %}
-  <form method="post">
+  <form method="post" action="/contact" class="contact-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="form_started_at" value="{{ form.command.form_started_at if form else form_started_at }}">
-    <label>Name <input name="name" value="{{ form.command.name if form else '' }}" required></label>
-    <label>Email <input name="email" type="email" value="{{ form.command.email if form else '' }}" required></label>
-    <label>Subject <input name="subject" value="{{ form.command.subject if form else '' }}" required></label>
+    <label>Name <input name="name" autocomplete="name" value="{{ form.command.name if form else '' }}" required></label>
+    <label>Email <input name="email" type="email" autocomplete="email" value="{{ form.command.email if form else '' }}" required></label>
+    <label>Subject <input name="subject" autocomplete="off" value="{{ form.command.subject if form else '' }}" required></label>
     <label class="visually-hidden">Company website <input name="company_website" tabindex="-1" autocomplete="off"></label>
     <label>Message <textarea name="message" rows="8" maxlength="5000" placeholder="Tell me what caught your attention, what role or collaboration you have in mind, or what question you have about the work." required>{{ form.command.message if form else '' }}</textarea></label>
-    <button class="button" type="submit">Send message</button>
+    <button class="button" type="submit" data-umami-event="contact-submit">Send message</button>
   </form>
 </section>
 {% endblock %}

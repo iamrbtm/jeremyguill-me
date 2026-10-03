@@ -5,6 +5,7 @@ from flask import (
     jsonify,
     redirect,
     render_template,
+    request,
     send_from_directory,
 )
 from sqlalchemy import select
@@ -169,4 +170,5 @@ def contact():
         view=build_home_view(),
         metadata=metadata,
         form_started_at=str(time.time()),
+        sent=request.args.get("sent") == "1",
     )

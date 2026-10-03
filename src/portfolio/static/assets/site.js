@@ -40,3 +40,16 @@ if (navToggle && primaryNav) {
     }
   });
 }
+
+document.querySelectorAll(".obfuscated-email").forEach((node) => {
+  const user = node.getAttribute("data-email-user");
+  const domain = node.getAttribute("data-email-domain");
+  if (!user || !domain) return;
+  const link = document.createElement("a");
+  link.href = `mailto:${user}@${domain}`;
+  link.textContent = `${user}@${domain}`;
+  node.replaceChildren(link);
+});
+
+const statusBanner = document.querySelector('.notice[role="status"]');
+if (statusBanner instanceof HTMLElement) statusBanner.focus();
