@@ -18,7 +18,7 @@ public_bp = Blueprint("public", __name__)
 def serve_public_media(filename: str):
     if ".." in filename or not filename.startswith("public/"):
         abort(404)
-    return send_from_directory(media_root(), filename)
+    return send_from_directory(media_root(), filename, max_age=2592000)
 
 
 @public_bp.route("/health/live")
