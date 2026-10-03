@@ -38,6 +38,15 @@
         <label>Order <input name="order" type="number" value="{{ form.order }}"></label>
       </div>
       <label>Summary <textarea name="summary" maxlength="320">{{ form.summary }}</textarea></label>
+      <fieldset>
+        <legend>At a glance (shown on the public case study and project cards)</legend>
+        <div class="field-row">
+          <label>Role <input name="role" value="{{ form.role }}" maxlength="120"></label>
+          <label>Year <input name="year" value="{{ form.year }}" maxlength="20"></label>
+        </div>
+        <label>Stack (comma separated) <input name="stack" value="{{ form.stack }}" maxlength="240"></label>
+        <label>Main result (one line) <input name="result_headline" value="{{ form.result_headline }}" maxlength="240"></label>
+      </fieldset>
 
       <fieldset class="admin-media">
         <legend>Images</legend>

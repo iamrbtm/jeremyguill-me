@@ -144,6 +144,13 @@ def new_project():
     )
 
 
+def _apply_glance_fields(project: Project, form: ProjectForm) -> None:
+    project.role = form.role or None
+    project.stack = form.stack or None
+    project.year = form.year or None
+    project.result_headline = form.result_headline or None
+
+
 @admin_bp.post("/projects")
 @passkey_required
 def create_project():
@@ -181,6 +188,7 @@ def create_project():
         project.hero_media_id = hero_asset.id
     elif request.form.get("hero_media_id"):
         project.hero_media_id = uuid.UUID(request.form["hero_media_id"])
+    _apply_glance_fields(project, form)
     try:
         save_draft(project, form.to_command(), expected_version=None)
     except IntegrityError:
@@ -268,6 +276,7 @@ def update_project(project_id: uuid.UUID):
         project.hero_media_id = hero_asset.id
     elif request.form.get("hero_media_id"):
         project.hero_media_id = uuid.UUID(request.form["hero_media_id"])
+    _apply_glance_fields(project, form)
     try:
         save_draft(project, form.to_command(), expected_version=form.version)
     except IntegrityError:

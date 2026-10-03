@@ -19,6 +19,32 @@ def seed_initial_command() -> None:
     click.echo(f"seeded {created} records")
 
 
+@content_cli.command("set-profile")
+@click.option("--linkedin", default=None)
+@click.option("--github", default=None)
+@click.option("--availability", default=None)
+@click.option("--email", default=None)
+def set_profile_command(
+    linkedin: str | None, github: str | None, availability: str | None, email: str | None
+) -> None:
+    profile = db.session.query(SiteProfile).first()
+    if profile is None:
+        raise click.ClickException("No profile exists yet; run seed-initial first.")
+    for label, value in (("linkedin", linkedin), ("github", github)):
+        if value and not value.startswith("https://"):
+            raise click.BadParameter("must start with https://", param_hint=f"--{label}")
+    if linkedin is not None:
+        profile.linkedin_url = linkedin or None
+    if github is not None:
+        profile.github_url = github or None
+    if availability is not None:
+        profile.availability_text = availability or None
+    if email is not None:
+        profile.email = email or None
+    db.session.commit()
+    click.echo("profile updated")
+
+
 def seed_initial_content() -> int:
     if db.session.query(SiteProfile).first() is not None:
         return 0

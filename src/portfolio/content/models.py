@@ -41,6 +41,9 @@ class SiteProfile(EditableMixin, db.Model):
     seo_description: Mapped[str | None] = mapped_column(String(320))
     seo_target_query: Mapped[str | None] = mapped_column(String(180))
     seo_last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    linkedin_url: Mapped[str | None] = mapped_column(String(300))
+    github_url: Mapped[str | None] = mapped_column(String(300))
+    availability_text: Mapped[str | None] = mapped_column(String(240))
 
 
 class Project(EditableMixin, db.Model):
@@ -66,6 +69,14 @@ class Project(EditableMixin, db.Model):
     seo_description: Mapped[str | None] = mapped_column(String(320))
     seo_target_query: Mapped[str | None] = mapped_column(String(180))
     seo_last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    role: Mapped[str | None] = mapped_column(String(120))
+    stack: Mapped[str | None] = mapped_column(String(240))
+    year: Mapped[str | None] = mapped_column(String(20))
+    result_headline: Mapped[str | None] = mapped_column(String(240))
+
+    @property
+    def stack_list(self) -> list[str]:
+        return [part.strip() for part in (self.stack or "").split(",") if part.strip()]
 
 
 class ProjectGalleryItem(db.Model):

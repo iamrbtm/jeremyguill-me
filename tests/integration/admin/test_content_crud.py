@@ -267,3 +267,23 @@ def test_update_project_at_existing_position_shifts_others(authenticated_client,
     assert first.sort_position == 1
     assert second.sort_position == 2
     assert third.sort_position == 3
+
+
+def test_project_glance_fields_round_trip(authenticated_client, db_session, project):
+    response = authenticated_client.post(
+        f"/admin/projects/{project.id}",
+        data=project_form(
+            project,
+            role="Creator & Developer",
+            stack="Flask, PostgreSQL",
+            year="2025",
+            result_headline="Scheduling became consistent",
+        ),
+    )
+
+    assert response.status_code in {200, 302, 303}
+    db_session.refresh(project)
+    assert project.role == "Creator & Developer"
+    assert project.stack_list == ["Flask", "PostgreSQL"]
+    assert project.year == "2025"
+    assert project.result_headline == "Scheduling became consistent"
