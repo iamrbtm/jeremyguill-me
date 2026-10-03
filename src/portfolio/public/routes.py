@@ -37,6 +37,7 @@ def home():
             canonical_path="/",
             is_published=True,
             kind="person",
+            name=view.profile.display_name or "Jeremy Guill",
             seo_title=view.profile.seo_title,
             seo_description=view.profile.seo_description,
         )

@@ -13,6 +13,7 @@ class SeoPage:
     seo_title: str | None = None
     seo_description: str | None = None
     social_image_url: str | None = None
+    name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -21,5 +22,7 @@ class PageMetadata:
     description: str
     canonical: str
     robots: str
-    open_graph_image: str | None
+    open_graph_image: str
     json_ld: dict[str, object]
+    og_title: str
+    og_type: str

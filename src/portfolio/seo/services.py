@@ -10,6 +10,8 @@ from portfolio.extensions import db
 
 from .schemas import PageMetadata, SeoPage
 
+DEFAULT_SOCIAL_IMAGE_PATH = "/static/assets/img/og-default.png"
+
 
 def build_metadata(page: SeoPage) -> PageMetadata:
     canonical = absolute_url(page.canonical_path)
@@ -18,8 +20,10 @@ def build_metadata(page: SeoPage) -> PageMetadata:
         description=page.seo_description or page.summary,
         canonical=canonical,
         robots="index,follow" if page.is_published else "noindex,nofollow",
-        open_graph_image=page.social_image_url,
+        open_graph_image=page.social_image_url or absolute_url(DEFAULT_SOCIAL_IMAGE_PATH),
         json_ld=build_json_ld(page),
+        og_title=page.seo_title or page.title,
+        og_type="article" if page.kind == "blog" else "website",
     )
 
 
@@ -32,12 +36,11 @@ def build_json_ld(page: SeoPage) -> dict[str, object]:
     data: dict[str, object] = {
         "@context": "https://schema.org",
         "@type": schema_type,
-        "name": page.seo_title or page.title,
+        "name": page.name or page.seo_title or page.title,
         "description": page.seo_description or page.summary,
         "url": absolute_url(page.canonical_path),
     }
-    if page.social_image_url:
-        data["image"] = page.social_image_url
+    data["image"] = page.social_image_url or absolute_url(DEFAULT_SOCIAL_IMAGE_PATH)
     return data
 
 
