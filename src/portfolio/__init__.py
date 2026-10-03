@@ -42,6 +42,10 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
 
     app.after_request(apply_security_headers)
 
+    from .public.chrome import SiteChrome
+
+    app.context_processor(lambda: {"site": SiteChrome()})
+
     import_models()
 
     from .admin.routes import admin_bp
