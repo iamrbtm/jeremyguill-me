@@ -53,6 +53,7 @@ def liveness():
 @public_bp.get("/")
 def home():
     view = build_home_view()
+    same_as = [u for u in (view.profile.linkedin_url, view.profile.github_url) if u]
     metadata = build_metadata(
         SeoPage(
             title="Jeremy Guill | Software and Workflow Portfolio",
@@ -64,6 +65,7 @@ def home():
             name=view.profile.display_name or "Jeremy Guill",
             seo_title=view.profile.seo_title,
             seo_description=view.profile.seo_description,
+            extra={"sameAs": same_as} if same_as else None,
         )
     )
     return render_template("public/home.html", view=view, metadata=metadata)
@@ -112,6 +114,12 @@ def project_detail(slug: str):
             kind="project",
             seo_title=project.seo_title,
             seo_description=project.seo_description,
+            breadcrumbs=[
+                ("Home", "/"),
+                ("Work", "/work"),
+                (project.title, f"/work/{project.slug}"),
+            ],
+            extra={"author": {"@type": "Person", "name": "Jeremy Guill"}},
         )
     )
     hero_asset = (

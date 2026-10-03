@@ -43,6 +43,10 @@ def detail(slug: str):
     ).scalar_one_or_none()
     if post is None:
         abort(404)
+    extra: dict[str, object] = {"author": {"@type": "Person", "name": "Jeremy Guill"}}
+    if post.published_at:
+        extra["datePublished"] = post.published_at.isoformat()
+    extra["dateModified"] = post.updated_at.isoformat()
     metadata = build_metadata(
         SeoPage(
             title=f"{post.title} | Jeremy Guill",
@@ -52,6 +56,7 @@ def detail(slug: str):
             kind="blog",
             seo_title=post.seo_title,
             seo_description=post.seo_description,
+            extra=extra,
         )
     )
     return render_template(

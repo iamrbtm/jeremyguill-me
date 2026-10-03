@@ -24,6 +24,7 @@ def build_metadata(page: SeoPage) -> PageMetadata:
         json_ld=build_json_ld(page),
         og_title=page.seo_title or page.title,
         og_type="article" if page.kind == "blog" else "website",
+        extra_json_ld=[breadcrumb_json_ld(page.breadcrumbs)] if page.breadcrumbs else [],
     )
 
 
@@ -41,7 +42,20 @@ def build_json_ld(page: SeoPage) -> dict[str, object]:
         "url": absolute_url(page.canonical_path),
     }
     data["image"] = page.social_image_url or absolute_url(DEFAULT_SOCIAL_IMAGE_PATH)
+    if page.extra:
+        data.update(page.extra)
     return data
+
+
+def breadcrumb_json_ld(crumbs: list[tuple[str, str]]) -> dict[str, object]:
+    return {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": i, "name": name, "item": absolute_url(path)}
+            for i, (name, path) in enumerate(crumbs, start=1)
+        ],
+    }
 
 
 def absolute_url(path: str) -> str:

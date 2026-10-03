@@ -15,3 +15,5 @@
 <meta name="twitter:description" content="{{ metadata.description }}">
 <meta name="twitter:image" content="{{ metadata.open_graph_image }}">
 <script type="application/ld+json">{{ metadata.json_ld|tojson }}</script>
+{% for block in metadata.extra_json_ld %}<script type="application/ld+json">{{ block|tojson }}</script>
+{% endfor %}

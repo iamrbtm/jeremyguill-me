@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -14,6 +14,8 @@ class SeoPage:
     seo_description: str | None = None
     social_image_url: str | None = None
     name: str | None = None
+    extra: dict[str, object] | None = None
+    breadcrumbs: list[tuple[str, str]] | None = None
 
 
 @dataclass(frozen=True)
@@ -26,3 +28,4 @@ class PageMetadata:
     json_ld: dict[str, object]
     og_title: str
     og_type: str
+    extra_json_ld: list[dict[str, object]] = field(default_factory=list)
