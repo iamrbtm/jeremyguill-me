@@ -56,4 +56,5 @@
   a { color: #000; text-decoration: underline; }
   .prose a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .85em; }
   .site-main { padding-top: 0; }
+  .mark-hero, .mark-hero * { color: #000 !important; }
 }

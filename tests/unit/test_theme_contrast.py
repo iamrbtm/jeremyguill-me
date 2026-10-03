@@ -74,6 +74,7 @@ def test_print_stylesheet_reveals_content_and_hides_chrome():
 
     assert ".site-header" in print_block and "display: none" in print_block
     assert "opacity: 1" in print_block
+    assert ".mark-hero, .mark-hero * { color: #000 !important; }" in print_block
 
 
 def test_theme_is_linked_after_other_styles(client):
