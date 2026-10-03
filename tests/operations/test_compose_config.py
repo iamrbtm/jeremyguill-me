@@ -58,7 +58,9 @@ def test_analytics_service_is_private_and_hardened():
     assert '"127.0.0.1:3001:3000"' in section
     assert "image: ghcr.io/umami-software/umami:postgresql-v2.20.2" in section
     assert "restart: unless-stopped" in section and "mem_limit:" in section
+    assert 'profiles: ["analytics"]' in section
     assert "APP_SECRET: ${UMAMI_APP_SECRET:-}" in section
+    assert "-ge 32" in section and "exec pnpm start-docker" in section
     assert "DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-}@db:5432/umami" in section
     assert "nginx-proxy-manager_default" in section
 

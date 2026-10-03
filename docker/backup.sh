@@ -16,8 +16,13 @@ backup_now() {
   members="portfolio.dump media.tar"
   # Umami's database is created manually (docs/analytics.md); only dump it if it exists.
   if psql --host=db --username=portfolio --dbname=portfolio -tAc "select 1 from pg_database where datname = 'umami'" | grep -q 1; then
-    pg_dump --format=custom --host=db --username=portfolio --dbname=umami --file="${workdir}/umami.dump"
-    members="$members umami.dump"
+    # Best-effort: an analytics problem must never block the portfolio backup.
+    if pg_dump --format=custom --host=db --username=portfolio --dbname=umami --file="${workdir}/umami.dump"; then
+      members="$members umami.dump"
+    else
+      rm -f "${workdir}/umami.dump"
+      printf 'umami dump failed; skipping\n' >&2
+    fi
   else
     printf 'umami database not found; skipping its dump\n'
   fi

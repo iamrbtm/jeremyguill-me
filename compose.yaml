@@ -112,9 +112,16 @@ services:
 
   analytics:
     image: ghcr.io/umami-software/umami:postgresql-v2.20.2
+    profiles: ["analytics"]
+    # Refuse to start with a missing/short secret or DB password (image default CMD is `pnpm start-docker`).
+    command:
+      - sh
+      - -c
+      - '[ "$${#APP_SECRET}" -ge 32 ] && [ -n "$${UMAMI_DB_PASSWORD}" ] || { echo "set UMAMI_APP_SECRET and UMAMI_DB_PASSWORD in .env (openssl rand -hex 32)" >&2; exit 1; }; exec pnpm start-docker'
     environment:
       DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-}@db:5432/umami
       APP_SECRET: ${UMAMI_APP_SECRET:-}
+      UMAMI_DB_PASSWORD: ${UMAMI_DB_PASSWORD:-}
       DISABLE_TELEMETRY: "1"
     ports:
       - "127.0.0.1:3001:3000"
