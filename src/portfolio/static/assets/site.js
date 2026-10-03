@@ -19,3 +19,24 @@ if ("IntersectionObserver" in window) {
 } else {
   revealItems.forEach((item) => item.classList.add("is-visible"));
 }
+
+const navToggle = document.querySelector(".nav-toggle");
+const primaryNav = document.getElementById("primary-nav");
+
+if (navToggle && primaryNav) {
+  navToggle.hidden = false;
+  const setOpen = (open) => {
+    navToggle.setAttribute("aria-expanded", String(open));
+    primaryNav.classList.toggle("is-open", open);
+  };
+  navToggle.addEventListener("click", () => setOpen(navToggle.getAttribute("aria-expanded") !== "true"));
+  primaryNav.addEventListener("click", (event) => {
+    if (event.target instanceof HTMLAnchorElement) setOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      setOpen(false);
+      navToggle.focus();
+    }
+  });
+}

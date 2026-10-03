@@ -1,13 +1,15 @@
 <header class="site-header">
   <div class="site-header__inner">
     <a class="brand" href="/" aria-label="Jeremy Guill home">Jeremy Guill</a>
-    <nav class="primary-nav" aria-label="Primary navigation">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" hidden>
+      <span class="nav-toggle__label">Menu</span>
+    </button>
+    <nav id="primary-nav" class="primary-nav" aria-label="Primary navigation">
       <a href="/#about">About</a>
-      <a href="/#capabilities">Capabilities</a>
-      <a href="/work">Work</a>
-      <a href="/experience">Experience</a>
-      {% if site.show_blog %}<a href="/blog">Blog</a>{% endif %}
-      <a href="/contact">Contact</a>
+      <a href="/work"{% if request.path.startswith('/work') %} aria-current="page"{% endif %}>Work</a>
+      <a href="/experience"{% if request.path == '/experience' %} aria-current="page"{% endif %}>Experience</a>
+      {% if site.show_blog %}<a href="/blog"{% if request.path.startswith('/blog') %} aria-current="page"{% endif %}>Blog</a>{% endif %}
+      <a class="nav-cta" href="/contact"{% if request.path == '/contact' %} aria-current="page"{% endif %}>Contact</a>
     </nav>
   </div>
 </header>
