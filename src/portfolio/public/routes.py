@@ -119,9 +119,11 @@ def project_detail(slug: str):
     gallery = project.gallery_assets()
     body_html, toc = enhance_case_study_html(project.rendered_html)
     all_projects = published_projects()
-    index = next((i for i, p in enumerate(all_projects) if p.id == project.id), 0)
-    previous_project = all_projects[index - 1] if index > 0 else None
-    next_project = all_projects[index + 1] if index + 1 < len(all_projects) else None
+    index = next((i for i, p in enumerate(all_projects) if p.id == project.id), None)
+    previous_project = all_projects[index - 1] if index is not None and index > 0 else None
+    next_project = (
+        all_projects[index + 1] if index is not None and index + 1 < len(all_projects) else None
+    )
     return render_template(
         "public/project.html",
         project=project,

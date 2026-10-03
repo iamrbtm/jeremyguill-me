@@ -18,8 +18,7 @@
   {% endif %}
   {% if hero_asset %}
     <img class="project-hero" src="/media/public/{{ hero_asset.id }}/hero_desktop.webp"
-         srcset="/media/public/{{ hero_asset.id }}/hero_mobile.webp 900w, /media/public/{{ hero_asset.id }}/hero_desktop.webp 1600w"
-         sizes="(max-width: 54rem) 100vw, 54rem" width="1600" height="900"
+         width="1600" height="900"
          alt="{{ hero_asset.alt_text or project.title ~ ' project preview' }}" loading="eager" fetchpriority="high">
   {% endif %}
   {% if toc|length >= 3 %}

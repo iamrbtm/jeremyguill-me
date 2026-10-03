@@ -59,3 +59,34 @@ def test_case_study_ends_with_call_to_action(client, db_session):
 
     page = client.get("/work/one").get_data(as_text=True)
     assert 'href="/contact"' in page.split("</article>")[1]
+
+
+def test_hero_serves_desktop_variant_only(client, db_session):
+    from portfolio.media.models import MediaAsset
+
+    asset = MediaAsset(original_filename="a.png", storage_key="k/a", mime_type="image/png",
+                       byte_size=1, alt_text="Alt", private=False)
+    db_session.add(asset)
+    db_session.flush()
+    _add(db_session, "one", 1, hero_media_id=asset.id)
+    db_session.commit()
+
+    page = client.get("/work/one").get_data(as_text=True)
+    tag = page[page.index('<img class="project-hero"'):].split(">")[0]
+
+    assert "srcset" not in tag and "sizes=" not in tag
+    assert f"/media/public/{asset.id}/hero_desktop.webp" in tag
+    assert "hero_mobile" not in page
+
+
+def test_project_missing_from_published_list_has_no_pager(client, db_session, monkeypatch):
+    _add(db_session, "one", 1)
+    _add(db_session, "two", 2)
+    db_session.commit()
+    monkeypatch.setattr("portfolio.public.routes.published_projects", lambda: [])
+
+    response = client.get("/work/one")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'rel="prev"' not in html and 'rel="next"' not in html
