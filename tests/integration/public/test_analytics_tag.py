@@ -89,3 +89,42 @@ def test_cta_events_are_declared(client):
 
     assert 'data-umami-event="cta-view-work"' in html
     assert 'data-umami-event="cta-connect-hero"' in html
+
+
+def test_bad_port_means_no_tag_and_closed_csp(client, app):
+    baseline = _csp(client)
+    for url in ("https://stats.example.test:abc/s.js", "https://stats.example.test:99999/s.js"):
+        _configure(app, url=url)
+
+        assert "data-website-id" not in client.get("/").get_data(as_text=True)
+        assert _csp(client) == baseline
+
+
+def test_ipv6_origin_renders_tag_and_csp(client, app):
+    _configure(app, url="https://[::1]:8443/s.js")
+
+    assert "data-website-id" in client.get("/").get_data(as_text=True)
+    assert "script-src 'self' https://[::1]:8443" in _csp(client)
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    ("url", "site_id", "origin"),
+    [
+        (SCRIPT, SITE_ID, "https://stats.example.test"),
+        ("http://stats.example.test/s.js", SITE_ID, "http://stats.example.test"),
+        ("https://u:p@stats.example.test/s.js", SITE_ID, "stats.example.test"),
+        (SCRIPT, "", "stats.example.test"),
+        ("https://stats.example.test:abc/s.js", SITE_ID, "stats.example.test"),
+        ("https://[::1]:8443/s.js", SITE_ID, "https://[::1]:8443"),
+    ],
+)
+def test_tag_present_iff_origin_in_csp(client, app, url, site_id, origin):
+    _configure(app, url=url, site_id=site_id)
+
+    tag = "data-website-id" in client.get("/").get_data(as_text=True)
+    in_csp = f"script-src 'self' {origin}" in _csp(client)
+
+    assert tag == in_csp

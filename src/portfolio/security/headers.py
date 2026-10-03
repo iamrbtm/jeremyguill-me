@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from urllib.parse import urlparse
-
 from flask import Response, current_app, request
+
+from portfolio.security.analytics import analytics_origin
 
 STATIC_HEADERS = {
     "Referrer-Policy": "strict-origin-when-cross-origin",
@@ -31,19 +31,10 @@ def content_security_policy(path: str, analytics_origin: str | None) -> str:
 
 
 def _analytics_origin() -> str | None:
-    if not str(current_app.config.get("ANALYTICS_WEBSITE_ID") or "").strip():
-        return None
-    url = str(current_app.config.get("ANALYTICS_SCRIPT_URL") or "").strip()
-    try:
-        parsed = urlparse(url)
-        host, port = parsed.hostname, parsed.port
-    except ValueError:
-        return None
-    if parsed.scheme != "https" or not host or parsed.username or parsed.password:
-        return None
-    if ":" in host:
-        host = f"[{host}]"
-    return f"https://{host}" + (f":{port}" if port else "")
+    return analytics_origin(
+        current_app.config.get("ANALYTICS_SCRIPT_URL"),
+        current_app.config.get("ANALYTICS_WEBSITE_ID"),
+    )
 
 
 def apply_security_headers(response: Response) -> Response:
