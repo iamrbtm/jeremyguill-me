@@ -52,9 +52,13 @@
     gap: 0;
   }
 
-  .js .primary-nav.is-open { display: flex; }
+  .js .primary-nav.is-open {
+    display: flex;
+    max-height: calc(100vh - 5rem);
+    overflow-y: auto;
+  }
 
-  .js .primary-nav a { padding: .85rem 0; border-top: 1px solid rgba(255, 255, 255, .15); }
+  .js .primary-nav a:not(.nav-cta) { padding: .85rem 0; border-top: 1px solid rgba(255, 255, 255, .15); }
 
   .js .primary-nav .nav-cta { margin-top: .5rem; text-align: center; }
 }

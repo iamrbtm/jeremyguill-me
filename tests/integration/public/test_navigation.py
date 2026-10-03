@@ -40,3 +40,9 @@ def test_script_wires_menu_toggle_and_escape():
     js = Path("src/portfolio/static/assets/site.js").read_text()
 
     assert "nav-toggle" in js and "aria-expanded" in js and "Escape" in js
+
+
+def test_escape_only_refocuses_when_menu_is_open():
+    js = Path("src/portfolio/static/assets/site.js").read_text()
+
+    assert 'event.key === "Escape" && navToggle.getAttribute("aria-expanded") === "true"' in js

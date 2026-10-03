@@ -34,7 +34,7 @@ if (navToggle && primaryNav) {
     if (event.target instanceof HTMLAnchorElement) setOpen(false);
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") {
+    if (event.key === "Escape" && navToggle.getAttribute("aria-expanded") === "true") {
       setOpen(false);
       navToggle.focus();
     }
