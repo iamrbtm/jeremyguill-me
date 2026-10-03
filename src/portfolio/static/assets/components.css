@@ -1,0 +1,11 @@
+/* New component styles. */
+
+.split-detail:not(:has(.split-detail__image)) { grid-template-columns: 1fr; }
+
+@media (max-width: 48rem) {
+  .mark-hero {
+    background:
+      linear-gradient(rgba(0, 0, 0, .1), rgba(0, 0, 0, .1)),
+      url("img/header-background-960.webp") center center / cover no-repeat;
+  }
+}

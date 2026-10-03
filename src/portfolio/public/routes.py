@@ -1,4 +1,12 @@
-from flask import Blueprint, abort, jsonify, redirect, render_template, send_from_directory
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    jsonify,
+    redirect,
+    render_template,
+    send_from_directory,
+)
 from sqlalchemy import select
 
 from portfolio.content.enums import PublicationState
@@ -19,6 +27,16 @@ def serve_public_media(filename: str):
     if ".." in filename or not filename.startswith("public/"):
         abort(404)
     return send_from_directory(media_root(), filename, max_age=2592000)
+
+
+@public_bp.get("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        current_app.static_folder,
+        "assets/img/favicon-32.png",
+        mimetype="image/png",
+        max_age=86400,
+    )
 
 
 @public_bp.route("/health/live")

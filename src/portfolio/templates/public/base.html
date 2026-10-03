@@ -4,10 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Jeremy Guill{% endblock %}</title>
+    <meta name="theme-color" content="#24262a">
+    <link rel="icon" href="{{ static_url('assets/img/favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ static_url('assets/img/favicon-32.png') }}" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="{{ static_url('assets/img/apple-touch-icon.png') }}">
     {% if metadata %}{% include "components/metadata.html" %}{% endif %}
     <link rel="preload" href="{{ static_url('assets/fonts/open-sans-var.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ static_url('assets/fonts.css') }}">
     <link rel="stylesheet" href="{{ static_url('assets/site.css') }}">
+    <link rel="stylesheet" href="{{ static_url('assets/components.css') }}">
     <script defer src="{{ static_url('assets/site.js') }}"></script>
   </head>
   <body>

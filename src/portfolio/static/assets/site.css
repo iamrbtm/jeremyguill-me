@@ -139,7 +139,7 @@ p { margin: 0; }
   padding: 7rem 0 5.5rem;
   background:
     linear-gradient(rgba(0, 0, 0, .1), rgba(0, 0, 0, .1)),
-    url("img/header-background.jpg") center center / cover no-repeat;
+    url("img/header-background.webp") center center / cover no-repeat;
   text-align: center;
 }
 
@@ -339,11 +339,11 @@ p { margin: 0; }
 }
 
 .split-detail__image {
+  width: 100%;
   min-height: 28rem;
-  background:
-    linear-gradient(135deg, rgba(36, 38, 42, .34), rgba(36, 38, 42, .6)),
-    url("img/jeremyguill_profile.jpg") center center / cover no-repeat;
-  filter: grayscale(.3) contrast(1.08);
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
 }
 
 .split-detail__copy {

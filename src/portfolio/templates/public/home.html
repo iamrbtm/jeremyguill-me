@@ -40,7 +40,12 @@
 </section>
 
 <section class="split-detail">
-  <div class="split-detail__image" aria-label="Jeremy Guill portrait"></div>
+  {% if site.has_portrait %}
+    <img class="split-detail__image" src="{{ static_url('assets/img/jeremyguill_profile.webp') }}"
+         srcset="{{ static_url('assets/img/jeremyguill_profile-600.webp') }} 600w, {{ static_url('assets/img/jeremyguill_profile.webp') }} 1200w"
+         sizes="(max-width: 62rem) 100vw, 50vw" width="1200" height="1400"
+         alt="Jeremy Guill" loading="lazy">
+  {% endif %}
   <div class="split-detail__copy bg-gray reveal">
     <div>
       <h2>How I approach technical work</h2>
