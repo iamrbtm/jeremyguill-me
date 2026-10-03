@@ -31,11 +31,19 @@ def content_security_policy(path: str, analytics_origin: str | None) -> str:
 
 
 def _analytics_origin() -> str | None:
-    url = current_app.config.get("ANALYTICS_SCRIPT_URL") or ""
-    parsed = urlparse(str(url))
-    if parsed.scheme == "https" and parsed.hostname:
-        return f"{parsed.scheme}://{parsed.netloc}"
-    return None
+    if not str(current_app.config.get("ANALYTICS_WEBSITE_ID") or "").strip():
+        return None
+    url = str(current_app.config.get("ANALYTICS_SCRIPT_URL") or "").strip()
+    try:
+        parsed = urlparse(url)
+        host, port = parsed.hostname, parsed.port
+    except ValueError:
+        return None
+    if parsed.scheme != "https" or not host or parsed.username or parsed.password:
+        return None
+    if ":" in host:
+        host = f"[{host}]"
+    return f"https://{host}" + (f":{port}" if port else "")
 
 
 def apply_security_headers(response: Response) -> Response:

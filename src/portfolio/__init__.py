@@ -23,6 +23,8 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
         OPENAI_MODEL=settings.openai_model,
         ADMIN_USERNAME=settings.admin_username,
         ADMIN_PASSWORD_HASH=settings.admin_password_hash,
+        ANALYTICS_SCRIPT_URL=settings.analytics_script_url,
+        ANALYTICS_WEBSITE_ID=settings.analytics_website_id,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Strict",
         SESSION_COOKIE_SECURE=settings.app_env == "production",

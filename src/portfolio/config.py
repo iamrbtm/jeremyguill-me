@@ -31,6 +31,8 @@ class Settings:
     openai_model: str
     admin_username: str
     admin_password_hash: str
+    analytics_script_url: str
+    analytics_website_id: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -52,4 +54,6 @@ class Settings:
             openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             admin_username=os.getenv("ADMIN_USERNAME", "admin"),
             admin_password_hash=os.getenv("ADMIN_PASSWORD_HASH", ""),
+            analytics_script_url=os.getenv("ANALYTICS_SCRIPT_URL", "").strip(),
+            analytics_website_id=os.getenv("ANALYTICS_WEBSITE_ID", "").strip(),
         )

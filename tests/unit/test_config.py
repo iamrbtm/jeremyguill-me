@@ -46,3 +46,17 @@ def test_development_allows_localhost_origin(monkeypatch):
     monkeypatch.setenv("PUBLIC_ORIGIN", "http://localhost:5000")
 
     assert Settings.from_env().public_origin == "http://localhost:5000"
+
+
+def test_analytics_settings_default_to_empty_and_read_env(monkeypatch):
+    monkeypatch.delenv("ANALYTICS_SCRIPT_URL", raising=False)
+    monkeypatch.delenv("ANALYTICS_WEBSITE_ID", raising=False)
+    assert Settings.from_env().analytics_script_url == ""
+
+    monkeypatch.setenv("ANALYTICS_SCRIPT_URL", "https://stats.example.test/script.js")
+    monkeypatch.setenv("ANALYTICS_WEBSITE_ID", "abc")
+    settings = Settings.from_env()
+    assert (settings.analytics_script_url, settings.analytics_website_id) == (
+        "https://stats.example.test/script.js",
+        "abc",
+    )

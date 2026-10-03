@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from functools import cached_property
 from pathlib import Path
+from urllib.parse import urlparse
 
 from flask import current_app
 from sqlalchemy import select
@@ -46,6 +47,17 @@ class SiteChrome:
         return (
             Path(current_app.static_folder or "") / "assets" / "img" / "jeremyguill_profile.webp"
         ).is_file()
+
+    @cached_property
+    def analytics(self) -> dict[str, str] | None:
+        url = (current_app.config.get("ANALYTICS_SCRIPT_URL") or "").strip()
+        site_id = (current_app.config.get("ANALYTICS_WEBSITE_ID") or "").strip()
+        if not site_id:
+            return None
+        parsed = urlparse(url)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+            return None
+        return {"script_url": url, "website_id": site_id}
 
     @cached_property
     def year(self) -> int:
