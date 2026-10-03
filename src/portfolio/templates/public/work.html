@@ -6,14 +6,10 @@
   <h1>Selected work</h1>
   <p class="lede">Representative projects across scheduling automation, lending-library systems, FileMaker workflows, and database-backed operations.</p>
 
-  {% if projects %}
-    <div class="work-index">
-      {% for project in projects %}
-        <article class="project-card reveal">
-          <h3><a href="/work/{{ project.slug }}">{{ project.title }}</a></h3>
-          <p>{{ project.summary }}</p>
-          <a class="blue-link" href="/work/{{ project.slug }}">Read the case study</a>
-        </article>
+  {% if cards %}
+    <div class="work-index card-grid">
+      {% for card in cards %}
+        {% include "components/project_card.html" %}
       {% endfor %}
     </div>
   {% else %}

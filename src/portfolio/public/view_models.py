@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import uuid
+from dataclasses import dataclass, field
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from portfolio.content.enums import PublicationState
 from portfolio.content.models import (
@@ -14,12 +15,25 @@ from portfolio.content.models import (
     SiteProfile,
 )
 from portfolio.extensions import db
+from portfolio.media.models import MediaAsset
 
 
 @dataclass(frozen=True)
 class CapabilityView:
     title: str
     body: str
+
+
+@dataclass(frozen=True)
+class ProjectCardView:
+    slug: str
+    title: str
+    summary: str
+    year: str | None
+    stack: list[str]
+    result_headline: str | None
+    hero_media_id: uuid.UUID | None
+    hero_alt: str
 
 
 @dataclass(frozen=True)
@@ -33,6 +47,32 @@ class HomeView:
     credentials: list[Credential]
     show_blog: bool
     blog_posts: list[BlogPost]
+    home_project_cards: list[ProjectCardView] = field(default_factory=list)
+    show_blog_section: bool = False
+
+
+def build_project_cards(projects: list[Project]) -> list[ProjectCardView]:
+    ids = [p.hero_media_id for p in projects if p.hero_media_id]
+    alts: dict[uuid.UUID, str] = {}
+    if ids:
+        rows = db.session.execute(
+            select(MediaAsset.id, MediaAsset.alt_text).where(MediaAsset.id.in_(ids))
+        ).all()
+        alts = {row.id: row.alt_text for row in rows}
+    return [
+        ProjectCardView(
+            slug=p.slug,
+            title=p.title,
+            summary=p.summary,
+            year=p.year,
+            stack=p.stack_list,
+            result_headline=p.result_headline,
+            hero_media_id=p.hero_media_id,
+            hero_alt=(alts.get(p.hero_media_id) if p.hero_media_id else None)
+            or f"{p.title} project preview",
+        )
+        for p in projects
+    ]
 
 
 def published_projects() -> list[Project]:
@@ -96,6 +136,14 @@ def build_home_view() -> HomeView:
                 .limit(3)
             ).scalars()
         )
+    published_posts = (
+        db.session.scalar(
+            select(func.count())
+            .select_from(BlogPost)
+            .where(BlogPost.state == PublicationState.PUBLISHED)
+        )
+        or 0
+    )
     return HomeView(
         profile=get_profile(),
         capabilities=[
@@ -119,4 +167,6 @@ def build_home_view() -> HomeView:
         credentials=list(credentials),
         show_blog=show_blog,
         blog_posts=blog_posts,
+        home_project_cards=build_project_cards(list(home_projects)),
+        show_blog_section=published_posts >= 3,
     )

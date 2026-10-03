@@ -14,7 +14,11 @@ from portfolio.content.models import Project
 from portfolio.extensions import db
 from portfolio.media.models import MediaAsset
 from portfolio.media.variants import media_root
-from portfolio.public.view_models import build_home_view, published_projects
+from portfolio.public.view_models import (
+    build_home_view,
+    build_project_cards,
+    published_projects,
+)
 from portfolio.security.validation import safe_redirect_target
 from portfolio.seo.schemas import SeoPage
 from portfolio.seo.services import build_metadata, resolve_redirect_chain
@@ -78,7 +82,11 @@ def work_index():
         )
     )
     return render_template(
-        "public/work.html", projects=projects, view=build_home_view(), metadata=metadata
+        "public/work.html",
+        projects=projects,
+        cards=build_project_cards(projects),
+        view=build_home_view(),
+        metadata=metadata,
     )
 
 

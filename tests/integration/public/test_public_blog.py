@@ -18,6 +18,8 @@ def _make_post(title, slug, state, summary="Summary", body="Body"):
 def test_homepage_shows_published_blog_posts(client, db_session):
     db_session.add(SiteProfile())
     db_session.add(_make_post("Published One", "one", PublicationState.PUBLISHED))
+    db_session.add(_make_post("Published Two", "two", PublicationState.PUBLISHED))
+    db_session.add(_make_post("Published Three", "three", PublicationState.PUBLISHED))
     db_session.add(_make_post("Draft Hidden", "draft", PublicationState.DRAFT))
     db_session.commit()
 
