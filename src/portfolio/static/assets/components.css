@@ -90,3 +90,23 @@
 .principle { max-width: 44rem; margin: 1.5rem auto 0; font-size: 1.35rem; line-height: 2rem; color: var(--ink); }
 .js .project-card2.reveal.is-visible { transition: opacity .7s ease, transform .2s ease, box-shadow .2s ease; }
 .js .project-card2.reveal.is-visible:hover, .js .project-card2.reveal.is-visible:focus-within { transform: translateY(-4px); box-shadow: 0 1.2rem 2.4rem rgba(0, 0, 0, .12); }
+
+/* Case study */
+.breadcrumb { font-size: .85rem; margin-bottom: 1rem; }
+.breadcrumb a { color: var(--blue-bright); }
+.glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem 1.5rem; margin: 1.5rem 0; padding: 1.2rem 1.4rem; background: var(--gray); border: 1px solid var(--line); border-radius: .5rem; }
+.glance div { min-width: 0; }
+.glance dt { font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); }
+.glance dd { margin: .2rem 0 0; color: var(--ink); }
+.toc { margin: 2rem 0; padding: 1.2rem 1.4rem; border-left: 4px solid var(--blue-bright); background: var(--gray); }
+.toc__title { margin: 0 0 .5rem; font-weight: 700; color: var(--ink); }
+.toc ol { margin: 0; padding-left: 1.2rem; display: grid; gap: .25rem; }
+.prose h2 { scroll-margin-top: 6rem; }
+.table-scroll { overflow-x: auto; margin: 1.5rem 0; }
+.table-scroll table { min-width: 32rem; }
+.prose pre { overflow-x: auto; max-width: 100%; }
+.case-cta { max-width: 54rem; margin: 4rem auto 0; padding: 2rem; text-align: center; background: var(--gray); border-radius: .6rem; }
+.project-pager { max-width: 54rem; margin: 2rem auto 4rem; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.project-pager a { display: block; text-decoration: none; font-weight: 700; color: var(--ink); max-width: 24rem; }
+.project-pager a span { display: block; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); }
+.project-pager a[rel="next"] { margin-left: auto; text-align: right; }

@@ -11,6 +11,7 @@ from sqlalchemy import select
 
 from portfolio.content.enums import PublicationState
 from portfolio.content.models import Project
+from portfolio.content.toc import enhance_case_study_html, reading_minutes
 from portfolio.extensions import db
 from portfolio.media.models import MediaAsset
 from portfolio.media.variants import media_root
@@ -116,11 +117,21 @@ def project_detail(slug: str):
         db.session.get(MediaAsset, project.hero_media_id) if project.hero_media_id else None
     )
     gallery = project.gallery_assets()
+    body_html, toc = enhance_case_study_html(project.rendered_html)
+    all_projects = published_projects()
+    index = next((i for i, p in enumerate(all_projects) if p.id == project.id), 0)
+    previous_project = all_projects[index - 1] if index > 0 else None
+    next_project = all_projects[index + 1] if index + 1 < len(all_projects) else None
     return render_template(
         "public/project.html",
         project=project,
         hero_asset=hero_asset,
         gallery=gallery,
+        body_html=body_html,
+        toc=toc,
+        minutes=reading_minutes(project.rendered_html),
+        previous_project=previous_project,
+        next_project=next_project,
         view=build_home_view(),
         metadata=metadata,
     )

@@ -1,26 +1,54 @@
 {% extends "public/base.html" %}
-{% block title %}{{ project.title }} | Jeremy Guill{% endblock %}
+{% block title %}{{ metadata.title }}{% endblock %}
 {% block content %}
 <article class="project-detail">
-  <p class="eyebrow">Case study</p>
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a> <span aria-hidden="true">/</span> <a href="/work">Work</a> <span aria-hidden="true">/</span> <span aria-current="page">{{ project.title }}</span>
+  </nav>
+  <p class="eyebrow">Case study · {{ minutes }} min read</p>
   <h1>{{ project.title }}</h1>
   <p class="lede">{{ project.summary }}</p>
+  {% if project.role or project.stack_list or project.year or project.result_headline %}
+    <dl class="glance">
+      {% if project.role %}<div><dt>Role</dt><dd>{{ project.role }}</dd></div>{% endif %}
+      {% if project.year %}<div><dt>Year</dt><dd>{{ project.year }}</dd></div>{% endif %}
+      {% if project.stack_list %}<div><dt>Stack</dt><dd>{{ project.stack_list|join(' · ') }}</dd></div>{% endif %}
+      {% if project.result_headline %}<div><dt>Result</dt><dd>{{ project.result_headline }}</dd></div>{% endif %}
+    </dl>
+  {% endif %}
   {% if hero_asset %}
     <img class="project-hero" src="/media/public/{{ hero_asset.id }}/hero_desktop.webp"
          srcset="/media/public/{{ hero_asset.id }}/hero_mobile.webp 900w, /media/public/{{ hero_asset.id }}/hero_desktop.webp 1600w"
-         sizes="(max-width: 54rem) 100vw, 54rem"
-         alt="{{ hero_asset.alt_text }}" loading="eager">
+         sizes="(max-width: 54rem) 100vw, 54rem" width="1600" height="900"
+         alt="{{ hero_asset.alt_text or project.title ~ ' project preview' }}" loading="eager" fetchpriority="high">
   {% endif %}
-  <div class="prose">{{ project.rendered_html | safe }}</div>
+  {% if toc|length >= 3 %}
+    <nav class="toc" aria-label="On this page">
+      <p class="toc__title">On this page</p>
+      <ol>{% for item in toc %}<li><a href="#{{ item.id }}">{{ item.text }}</a></li>{% endfor %}</ol>
+    </nav>
+  {% endif %}
+  <div class="prose">{{ body_html | safe }}</div>
   {% if gallery %}
     <section class="project-gallery" aria-label="Project gallery">
       <h2>Gallery</h2>
       <div class="gallery-grid">
         {% for asset in gallery %}
-          <img src="/media/public/{{ asset.id }}/hero_desktop.webp" alt="{{ asset.alt_text }}" loading="lazy">
+          <img src="/media/public/{{ asset.id }}/hero_desktop.webp" width="1600" height="900" alt="{{ asset.alt_text or project.title ~ ' gallery image' }}" loading="lazy">
         {% endfor %}
       </div>
     </section>
   {% endif %}
 </article>
+<section class="case-cta">
+  <h2>Have a similar problem?</h2>
+  <p>I'm happy to talk through how I'd approach it.</p>
+  <a class="button button-primary" href="/contact" data-umami-event="cta-connect-case-study">Connect with me</a>
+</section>
+{% if previous_project or next_project %}
+<nav class="project-pager" aria-label="More case studies">
+  {% if previous_project %}<a rel="prev" href="/work/{{ previous_project.slug }}"><span>Previous</span>{{ previous_project.title }}</a>{% endif %}
+  {% if next_project %}<a rel="next" href="/work/{{ next_project.slug }}"><span>Next</span>{{ next_project.title }}</a>{% endif %}
+</nav>
+{% endif %}
 {% endblock %}
