@@ -62,3 +62,12 @@
 
   .js .primary-nav .nav-cta { margin-top: .5rem; text-align: center; }
 }
+
+/* Footer */
+.site-footer { flex-wrap: wrap; }
+.site-footer__about { flex: 2 1 20rem; }
+.site-footer__availability { color: var(--blue); font-weight: 700; }
+.site-footer__links { display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; flex: 1 1 14rem; align-content: flex-start; }
+.site-footer__links a { color: var(--blue-bright); font-weight: 700; text-decoration: none; }
+.site-footer__links a:hover { text-decoration: underline; }
+.site-footer__legal { flex-basis: 100%; margin: 0; font-size: .85rem; }

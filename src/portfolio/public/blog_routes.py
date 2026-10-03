@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from flask import Blueprint, abort, redirect, render_template
+from pathlib import Path
+
+from flask import Blueprint, abort, current_app, render_template, send_from_directory
 from sqlalchemy import select
 
 from portfolio.content.enums import PublicationState
@@ -59,4 +61,7 @@ def detail(slug: str):
 
 @blog_bp.get("/resume")
 def resume():
-    return redirect("/static/resume/Resume2026.pdf")
+    path = Path(current_app.static_folder or "") / "resume"
+    if not (path / "Resume2026.pdf").is_file():
+        abort(404)
+    return send_from_directory(path, "Resume2026.pdf", mimetype="application/pdf", max_age=3600)

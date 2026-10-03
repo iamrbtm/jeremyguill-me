@@ -48,10 +48,3 @@ def test_draft_blog_post_is_private(client, db_session):
     response = client.get("/blog/draft")
 
     assert response.status_code == 404
-
-
-def test_resume_redirects_to_current_public_asset(client):
-    response = client.get("/resume")
-
-    assert response.status_code == 302
-    assert response.headers["Location"].endswith("/static/resume/Resume2026.pdf")

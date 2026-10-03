@@ -21,12 +21,6 @@
     <main id="main" class="site-main">
       {% block content %}{% endblock %}
     </main>
-    <footer class="site-footer">
-      <div>
-        <p class="site-footer__title">Jeremy Guill</p>
-        <p>A portfolio of practical software, database workflows, and implementation work built across real operational settings.</p>
-      </div>
-      <a class="footer-link" href="/contact">Connect with Jeremy</a>
-    </footer>
+    {% include "components/footer.html" %}
   </body>
 </html>

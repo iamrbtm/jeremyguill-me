@@ -1,0 +1,17 @@
+<footer class="site-footer">
+  <div class="site-footer__about">
+    <p class="site-footer__title">Jeremy Guill</p>
+    <p>Practical software, database workflows, and implementation work built across real operational settings.</p>
+    {% if site.profile.availability_text %}<p class="site-footer__availability">{{ site.profile.availability_text }}</p>{% endif %}
+  </div>
+  <nav class="site-footer__links" aria-label="Footer">
+    <a href="/work">Work</a>
+    <a href="/experience">Experience</a>
+    {% if site.show_blog %}<a href="/blog">Blog</a>{% endif %}
+    <a href="/contact">Contact</a>
+    {% if site.has_resume %}<a href="/resume" data-umami-event="resume-download">Résumé (PDF)</a>{% endif %}
+    {% if site.profile.linkedin_url %}<a href="{{ site.profile.linkedin_url }}" rel="noopener noreferrer me" target="_blank">LinkedIn</a>{% endif %}
+    {% if site.profile.github_url %}<a href="{{ site.profile.github_url }}" rel="noopener noreferrer me" target="_blank">GitHub</a>{% endif %}
+  </nav>
+  <p class="site-footer__legal">© {{ site.year }} Jeremy Guill</p>
+</footer>

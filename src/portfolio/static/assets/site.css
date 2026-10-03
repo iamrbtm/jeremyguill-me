@@ -482,11 +482,6 @@ blockquote {
   font-weight: 700;
 }
 
-.footer-link {
-  color: var(--blue-bright);
-  font-weight: 700;
-}
-
 .page-section,
 .project-detail {
   max-width: 54rem;
