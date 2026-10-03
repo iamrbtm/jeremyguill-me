@@ -72,3 +72,16 @@ def test_umami_has_its_own_database_not_the_portfolio_one():
     assert "/umami" in section
     assert "/portfolio" not in section
     assert "ports:" in section and "127.0.0.1:3001:3000" in section
+
+
+def test_dockerignore_does_not_exclude_content_copy_markdown():
+    patterns = [
+        line.strip()
+        for line in Path(".dockerignore").read_text().splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+
+    excluding = [p for p in patterns if not p.startswith("!") and p in {"*.md", "**/*.md", "src"}]
+    assert not excluding
+    assert Path("src/portfolio/content/copy/README.md").is_file()
+    assert "COPY src ./src" in Path("Dockerfile").read_text()

@@ -45,6 +45,34 @@ def set_profile_command(
     click.echo("profile updated")
 
 
+@content_cli.command("apply-copy")
+@click.option("--dry-run", is_flag=True, help="Show what would change without writing.")
+@click.argument("paths", nargs=-1, type=click.Path(exists=True, dir_okay=False))
+def apply_copy_command(dry_run: bool, paths: tuple[str, ...]) -> None:
+    from pathlib import Path
+
+    from portfolio.content.copy_apply import (
+        COPY_DIR,
+        CopyError,
+        apply_copy_doc,
+        parse_copy_file,
+    )
+
+    files = [Path(p) for p in paths] or sorted(
+        p for p in COPY_DIR.glob("*.md") if p.name.lower() != "readme.md"
+    )
+    try:
+        for file in files:
+            click.echo(apply_copy_doc(parse_copy_file(file.read_text()), dry_run=dry_run))
+        if dry_run:
+            click.echo("dry run: no changes written")
+        else:
+            db.session.commit()
+    except CopyError as exc:
+        db.session.rollback()
+        raise click.ClickException(str(exc)) from exc
+
+
 def seed_initial_content() -> int:
     if db.session.query(SiteProfile).first() is not None:
         return 0
