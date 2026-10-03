@@ -6,7 +6,7 @@ from pathlib import Path
 def test_compose_keeps_database_private():
     compose = Path("compose.yaml").read_text()
 
-    db_section = compose.split("  db:", 1)[1].split("  backup:", 1)[0]
+    db_section = compose.split("  db:", 1)[1].split("\n  analytics:", 1)[0]
     assert "ports:" not in db_section
 
 
@@ -49,3 +49,24 @@ def test_nginx_config_serves_static_media_and_denies_dotfiles():
     assert "location /static/" in nginx
     assert "location /media/" in nginx
     assert "deny all" in nginx
+
+
+def test_analytics_service_is_private_and_hardened():
+    compose = Path("compose.yaml").read_text()
+    section = compose.split("  analytics:", 1)[1].split("\n  backup:", 1)[0]
+
+    assert '"127.0.0.1:3001:3000"' in section
+    assert "image: ghcr.io/umami-software/umami:postgresql-v2.20.2" in section
+    assert "restart: unless-stopped" in section and "mem_limit:" in section
+    assert "APP_SECRET: ${UMAMI_APP_SECRET:-}" in section
+    assert "DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-}@db:5432/umami" in section
+    assert "nginx-proxy-manager_default" in section
+
+
+def test_umami_has_its_own_database_not_the_portfolio_one():
+    section = Path("compose.yaml").read_text().split("  analytics:", 1)[1]
+    section = section.split("\n  backup:", 1)[0]
+
+    assert "/umami" in section
+    assert "/portfolio" not in section
+    assert "ports:" in section and "127.0.0.1:3001:3000" in section

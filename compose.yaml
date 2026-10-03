@@ -110,6 +110,28 @@ services:
         max-file: "3"
     restart: unless-stopped
 
+  analytics:
+    image: ghcr.io/umami-software/umami:postgresql-v2.20.2
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:-}@db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:-}
+      DISABLE_TELEMETRY: "1"
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - default
+      - nginx-proxy-manager_default
+    mem_limit: 384m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
   backup:
     build:
       context: .

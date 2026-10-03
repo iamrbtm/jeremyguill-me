@@ -13,8 +13,17 @@ backup_now() {
   encrypted="${archive}.age"
 
   pg_dump --format=custom --host=db --username=portfolio --dbname=portfolio --file="$dump_path"
+  members="portfolio.dump media.tar"
+  # Umami's database is created manually (docs/analytics.md); only dump it if it exists.
+  if psql --host=db --username=portfolio --dbname=portfolio -tAc "select 1 from pg_database where datname = 'umami'" | grep -q 1; then
+    pg_dump --format=custom --host=db --username=portfolio --dbname=umami --file="${workdir}/umami.dump"
+    members="$members umami.dump"
+  else
+    printf 'umami database not found; skipping its dump\n'
+  fi
   tar -C /source -cf "$media_archive" media
-  tar -C "$workdir" -cf "$archive" portfolio.dump media.tar
+  # shellcheck disable=SC2086
+  tar -C "$workdir" -cf "$archive" $members
 
   recipient_file="${AGE_RECIPIENT_FILE:-/run/secrets/age_recipient}"
   if [ -f "$recipient_file" ]; then
