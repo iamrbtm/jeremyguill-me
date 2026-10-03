@@ -6,6 +6,13 @@
   <section class="admin-panel">
     <p class="eyebrow">Single-owner CMS</p>
     <h1>Dashboard</h1>
+    {% if settings %}
+      <div class="admin-links">
+        <a href="{{ url_for('integrations.ai_settings') }}">AI settings</a>
+        <a href="{{ url_for('integrations.seo_settings') }}">SEO automation</a>
+        <a href="{{ url_for('integrations.email_settings') }}">SMTP email settings</a>
+      </div>
+    {% endif %}
     <div class="metric-grid">
       <article><strong>{{ view.project_count }}</strong><span>Projects</span></article>
       <article><strong>{{ view.blog_count }}</strong><span>Blog posts</span></article>

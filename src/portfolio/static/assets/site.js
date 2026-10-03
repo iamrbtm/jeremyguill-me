@@ -1,8 +1,6 @@
-import "../css/site.css";
-
 document.documentElement.classList.add("js");
 
-const revealItems = document.querySelectorAll<HTMLElement>(".reveal");
+const revealItems = document.querySelectorAll(".reveal");
 
 if ("IntersectionObserver" in window) {
   const observer = new IntersectionObserver(

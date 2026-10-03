@@ -7,6 +7,7 @@ import pytest
 from portfolio.contact.mailer import DeliveryResult
 from portfolio.contact.models import ContactSubmission
 from portfolio.extensions import db
+from portfolio.integrations.models import IntegrationSecret
 
 
 def valid_contact_payload(**overrides):
@@ -77,6 +78,107 @@ def test_admin_can_mark_contact_read(authenticated_client, db_session):
     assert response.status_code == 302
     db_session.refresh(submission)
     assert submission.state == "read"
+
+
+def test_admin_can_save_smtp_settings(authenticated_client, db_session):
+    response = authenticated_client.post(
+        "/admin/settings/email",
+        data={
+            "host": "smtp.example.com",
+            "port": "587",
+            "security": "starttls",
+            "username": "mailer@example.com",
+            "password": "secret-password",
+            "sender": "contact@jeremyguill.me",
+            "recipient": "jeremy@jeremyguill.me",
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"SMTP settings saved" in response.data
+    assert IntegrationSecret.query.filter_by(name="smtp_host").one() is not None
+    password_secret = IntegrationSecret.query.filter_by(name="smtp_password").one()
+    assert password_secret.key_hint == "word"
+
+
+def test_blank_smtp_password_keeps_existing_password(authenticated_client, db_session):
+    authenticated_client.post(
+        "/admin/settings/email",
+        data={
+            "host": "smtp.example.com",
+            "port": "587",
+            "security": "starttls",
+            "username": "mailer@example.com",
+            "password": "secret-password",
+            "sender": "contact@jeremyguill.me",
+            "recipient": "jeremy@jeremyguill.me",
+        },
+    )
+    first_password = IntegrationSecret.query.filter_by(name="smtp_password").one().encrypted_value
+
+    authenticated_client.post(
+        "/admin/settings/email",
+        data={
+            "host": "smtp2.example.com",
+            "port": "465",
+            "security": "ssl",
+            "username": "mailer2@example.com",
+            "password": "",
+            "sender": "contact@jeremyguill.me",
+            "recipient": "jeremy@jeremyguill.me",
+        },
+    )
+
+    second_password = IntegrationSecret.query.filter_by(name="smtp_password").one().encrypted_value
+    assert second_password == first_password
+
+
+def test_admin_can_send_smtp_test_email(authenticated_client, db_session, monkeypatch):
+    sent_messages = []
+
+    class FakeSMTP:
+        def __init__(self, host, port, timeout):
+            self.host = host
+            self.port = port
+            self.timeout = timeout
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+        def starttls(self):
+            return None
+
+        def login(self, username, password):
+            assert username == "mailer@example.com"
+            assert password == "secret-password"
+
+        def send_message(self, message):
+            sent_messages.append(message)
+
+    monkeypatch.setattr("portfolio.contact.mailer.smtplib.SMTP", FakeSMTP)
+    authenticated_client.post(
+        "/admin/settings/email",
+        data={
+            "host": "smtp.example.com",
+            "port": "587",
+            "security": "starttls",
+            "username": "mailer@example.com",
+            "password": "secret-password",
+            "sender": "contact@jeremyguill.me",
+            "recipient": "jeremy@jeremyguill.me",
+        },
+    )
+
+    response = authenticated_client.post(
+        "/admin/settings/email/test", data={"test_recipient": "test@example.com"}
+    )
+
+    assert response.status_code == 200
+    assert b"Test email sent" in response.data
+    assert sent_messages[0]["To"] == "test@example.com"
 
 
 @pytest.fixture()

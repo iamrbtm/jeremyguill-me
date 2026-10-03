@@ -48,6 +48,8 @@ def detail(slug: str):
             canonical_path=f"/blog/{post.slug}",
             is_published=True,
             kind="blog",
+            seo_title=post.seo_title,
+            seo_description=post.seo_description,
         )
     )
     return render_template(

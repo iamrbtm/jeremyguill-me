@@ -6,6 +6,7 @@ from portfolio.content.models import BlogPost, Project, utcnow
 from portfolio.extensions import db
 from portfolio.media.models import MediaAsset
 from portfolio.media.variants import generate_variants
+from portfolio.seo.automation import run_daily_review
 
 from .models import Job
 
@@ -18,6 +19,8 @@ def handle_job(job: Job) -> None:
     elif job.kind == "media-variant":
         asset = db.get_or_404(MediaAsset, job.entity_id)
         generate_variants(asset)
+    elif job.kind == "seo-daily-review":
+        run_daily_review()
     else:
         raise ValueError(f"Unsupported job kind: {job.kind}")
 

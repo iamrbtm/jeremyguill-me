@@ -21,6 +21,8 @@ def next_revision_number(entity: object) -> int:
 
 
 def create_revision(entity: object, *, reason: str) -> ContentRevision:
+    db.session.add(entity)
+    db.session.flush()
     revision = ContentRevision(
         entity_type=entity_type_for(entity),
         entity_id=entity.id,

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import secrets
 import uuid
 from collections.abc import Mapping
@@ -9,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 
 from flask import current_app
 from sqlalchemy import select
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from portfolio.audit.services import record_event
 from portfolio.auth.models import AdminSession, AuthChallenge, BootstrapToken, PasskeyCredential
@@ -20,6 +22,10 @@ class InvalidChallenge(ValueError):
 
 
 class InvalidCredential(ValueError):
+    pass
+
+
+class InvalidBootstrapToken(ValueError):
     pass
 
 
@@ -108,6 +114,96 @@ def finish_authentication(response: Mapping[str, object], challenge_id: uuid.UUI
         target_type="admin_session",
         target_id=str(admin_session.id),
         metadata={"rp_id": current_app.config["WEBAUTHN_RP_ID"]},
+    )
+    db.session.commit()
+    return admin_session
+
+
+def get_valid_admin_session(session_id: str | None) -> AdminSession | None:
+    if not session_id:
+        return None
+    try:
+        admin_session_id = uuid.UUID(session_id)
+    except ValueError:
+        return None
+    admin_session = db.session.get(AdminSession, admin_session_id)
+    if admin_session is None or admin_session.revoked_at is not None:
+        return None
+    if as_aware(admin_session.absolute_expires_at) <= utcnow():
+        return None
+    admin_session.last_seen_at = utcnow()
+    db.session.commit()
+    return admin_session
+
+
+def make_password_hash(password: str) -> str:
+    return generate_password_hash(password, method="pbkdf2:sha256", salt_length=16)
+
+
+def verify_password_login(username: str | None, password: str | None) -> AdminSession | None:
+    expected_username = current_app.config.get("ADMIN_USERNAME", "")
+    expected_hash = current_app.config.get("ADMIN_PASSWORD_HASH", "")
+    if not expected_username or not expected_hash:
+        return None
+
+    password_ok = bool(password) and check_password_hash(expected_hash, password or "")
+    username_ok = hmac.compare_digest(username or "", expected_username)
+    if not (password_ok and username_ok):
+        return None
+
+    admin_session = AdminSession(absolute_expires_at=utcnow() + timedelta(hours=24))
+    db.session.add(admin_session)
+    record_event(
+        action="auth.password.authenticated",
+        actor="admin",
+        target_type="admin_session",
+        target_id=str(admin_session.id),
+    )
+    db.session.commit()
+    return admin_session
+
+
+def _bootstrap_digest(token: str) -> bytes:
+    return hashlib.sha256(token.encode()).digest()
+
+
+def validate_bootstrap_token(token: str | None) -> bool:
+    if not token:
+        return False
+    bootstrap_token = db.session.execute(
+        select(BootstrapToken).where(BootstrapToken.digest == _bootstrap_digest(token))
+    ).scalar_one_or_none()
+    return (
+        bootstrap_token is not None
+        and bootstrap_token.used_at is None
+        and as_aware(bootstrap_token.expires_at) > utcnow()
+    )
+
+
+def consume_bootstrap_token(token: str | None) -> AdminSession:
+    if not token:
+        raise InvalidBootstrapToken("Missing bootstrap token")
+    bootstrap_token = db.session.execute(
+        select(BootstrapToken)
+        .where(BootstrapToken.digest == _bootstrap_digest(token))
+        .with_for_update()
+    ).scalar_one_or_none()
+    if (
+        bootstrap_token is None
+        or bootstrap_token.used_at is not None
+        or as_aware(bootstrap_token.expires_at) <= utcnow()
+    ):
+        raise InvalidBootstrapToken("Invalid or expired bootstrap token")
+
+    bootstrap_token.used_at = utcnow()
+    admin_session = AdminSession(absolute_expires_at=utcnow() + timedelta(hours=24))
+    db.session.add(admin_session)
+    record_event(
+        action="auth.bootstrap.authenticated",
+        actor="admin",
+        target_type="admin_session",
+        target_id=str(admin_session.id),
+        metadata={"purpose": bootstrap_token.purpose},
     )
     db.session.commit()
     return admin_session

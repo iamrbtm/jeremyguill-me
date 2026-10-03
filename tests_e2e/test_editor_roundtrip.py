@@ -13,11 +13,11 @@ def test_editor_component_wires_source_textarea_to_browser_adapter():
 
 
 def test_editor_adapter_exposes_narrow_roundtrip_contract():
-    source = Path("src/portfolio/static_src/ts/editor.ts").read_text()
+    source = Path("src/portfolio/static/assets/editor.js").read_text()
 
     assert "export class PortfolioEditor" in source
-    assert "getMarkdown(): string" in source
-    assert "setMarkdown(source: string): void" in source
-    assert "changeMode" in source
+    assert "getMarkdown()" in source
+    assert "setMarkdown(source)" in source
+    assert "toggleMode()" in source
     assert "portfolio:editor-ready" in source
     assert "sourceField.value = adapter.getMarkdown()" in source

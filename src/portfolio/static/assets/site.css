@@ -139,7 +139,7 @@ p { margin: 0; }
   padding: 7rem 0 5.5rem;
   background:
     linear-gradient(rgba(0, 0, 0, .1), rgba(0, 0, 0, .1)),
-    url("../img/header-background.jpg") center center / cover no-repeat;
+    url("img/header-background.jpg") center center / cover no-repeat;
   text-align: center;
 }
 
@@ -227,7 +227,50 @@ p { margin: 0; }
 .testimonial-section h2,
 .contact-cta h2 { margin-bottom: 1rem; }
 
+.about-grid--single {
+  grid-template-columns: 1fr;
+}
+
 .mini-timeline + .mini-timeline { margin-top: 2.35rem; }
+
+.mini-timeline-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
+}
+
+.mini-timeline-copy {
+  min-width: 0;
+}
+
+.mini-timeline-copy h3 {
+  margin: 0 0 0.2rem;
+}
+
+.mini-timeline-copy p:last-child {
+  margin: 0;
+}
+
+.mini-timeline-logo {
+  height: 100px;
+  width: auto;
+  object-fit: contain;
+  justify-self: end;
+}
+
+.mini-timeline-markdown {
+  margin-top: 0.75rem;
+}
+
+.mini-timeline-markdown ul,
+.mini-timeline-markdown ol {
+  padding-left: 1.25rem;
+}
+
+.mini-timeline-markdown li {
+  margin-bottom: 0.25rem;
+}
 
 .time {
   margin-bottom: .45rem;
@@ -299,7 +342,7 @@ p { margin: 0; }
   min-height: 28rem;
   background:
     linear-gradient(135deg, rgba(36, 38, 42, .34), rgba(36, 38, 42, .6)),
-    url("../img/jeremyguill_profile.jpg") center center / cover no-repeat;
+    url("img/jeremyguill_profile.jpg") center center / cover no-repeat;
   filter: grayscale(.3) contrast(1.08);
 }
 
@@ -324,12 +367,23 @@ p { margin: 0; }
 .project-thumb,
 .work-card__image {
   display: block;
+  position: relative;
   min-height: 19rem;
   margin-bottom: 1rem;
   overflow: hidden;
   background-size: cover;
   background-position: center;
+  border-radius: 14px;
+  box-shadow: 0 1rem 2rem rgb(11 17 40 / 12%);
   transition: transform .35s ease, filter .35s ease;
+}
+
+.project-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .project-thumb:hover,
@@ -374,6 +428,13 @@ p { margin: 0; }
 .work-card { min-width: 0; }
 
 .work-card__image { min-height: 14rem; }
+
+.work-card-logo {
+  max-height: 3rem;
+  max-width: 100%;
+  object-fit: contain;
+  margin-bottom: 0.5rem;
+}
 
 .testimonial-section {
   padding: clamp(5rem, 9vw, 7rem) 0;
@@ -445,12 +506,177 @@ blockquote {
   margin-bottom: 2rem;
 }
 
+.project-hero {
+  border-radius: 16px;
+  box-shadow: 0 1.25rem 2.5rem rgb(11 17 40 / 16%);
+  display: block;
+  height: auto;
+  margin: 0 0 2.5rem;
+  max-width: 100%;
+  width: 100%;
+}
+
+.project-gallery {
+  margin-top: 3rem;
+}
+
+.project-gallery h2 {
+  font-size: 1.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.gallery-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+}
+
+.gallery-grid img {
+  border-radius: 12px;
+  box-shadow: 0 0.75rem 1.5rem rgb(11 17 40 / 12%);
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
 .prose { font-size: 1.1rem; line-height: 1.8; }
+
+.prose h2 {
+  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  line-height: 1.25;
+  margin: 2.5rem 0 1rem;
+}
+
+.prose h3 {
+  font-size: clamp(1.25rem, 2.4vw, 1.5rem);
+  line-height: 1.3;
+  margin: 2rem 0 0.75rem;
+}
+
+.prose p { margin: 0 0 1.25rem; }
+
+.prose ul,
+.prose ol { margin: 0 0 1.25rem; padding-left: 1.5rem; }
+
+.prose li { margin: 0.4rem 0; }
+
+.prose a {
+  color: var(--blue-bright);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose strong { font-weight: 800; }
+
+.prose blockquote {
+  border-left: 0.3rem solid var(--blue);
+  color: var(--ink);
+  font-style: italic;
+  margin: 1.5rem 0;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+}
+
+.prose img {
+  border-radius: 12px;
+  height: auto;
+  margin: 1.5rem 0;
+  max-width: 100%;
+}
+
+.prose code {
+  background: rgb(11 17 40 / 6%);
+  border-radius: 6px;
+  font-size: 0.92em;
+  padding: 0.15rem 0.4rem;
+}
+
+.prose pre {
+  background: #11131a;
+  border-radius: 12px;
+  color: #e9edf6;
+  overflow-x: auto;
+  padding: 1.1rem 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.prose pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+
+.prose table {
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  width: 100%;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--line);
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 2.5rem 0;
+}
 
 .timeline-item,
 .project-card {
   padding: 1.5rem 0;
   border-top: 1px solid var(--line);
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.timeline-logo {
+  height: 6em;
+  width: auto;
+  max-width: 12rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.timeline-header h2 {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.timeline-dates {
+  margin: 0.25rem 0 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.experience-list {
+  display: grid;
+  gap: 2.35rem;
+  margin-top: 2rem;
+}
+
+.experience-list .mini-timeline + .mini-timeline {
+  margin-top: 0;
+}
+
+.timeline-markdown {
+  margin-top: 0.75rem;
+}
+
+.timeline-markdown ul,
+.timeline-markdown ol {
+  padding-left: 1.25rem;
+}
+
+.timeline-markdown li {
+  margin-bottom: 0.25rem;
 }
 
 .project-card h3 { margin-bottom: .65rem; }
@@ -576,6 +802,14 @@ textarea { resize: vertical; }
 
   .project-thumb { min-height: 14rem; }
 
+  .mini-timeline-header {
+    grid-template-columns: 1fr;
+  }
+
+  .mini-timeline-logo {
+    justify-self: start;
+  }
+
   .site-footer { flex-direction: column; }
 }
 
@@ -589,4 +823,16 @@ textarea { resize: vertical; }
     opacity: 1;
     transform: none;
   }
+}
+
+.work-cta {
+  margin-top: 2.5rem;
+}
+
+.work-index {
+  margin-top: 2.5rem;
+}
+
+.work-index .project-card:last-child {
+  border-bottom: 1px solid var(--line);
 }

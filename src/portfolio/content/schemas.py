@@ -9,3 +9,4 @@ class ContentCommand:
     summary: str
     source_markdown: str
     slug: str | None = None
+    order: int | None = None

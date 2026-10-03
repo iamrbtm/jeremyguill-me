@@ -34,6 +34,17 @@ def test_completed_job_allows_new_job(db_session, project):
     assert first.id != second.id
 
 
+def test_recurring_job_can_complete_after_previous_completion(db_session, project):
+    first = enqueue_unique("publish", "project", project.id, utcnow())
+    succeed_job(first)
+    second = enqueue_unique("publish", "project", project.id, utcnow())
+
+    succeed_job(second)
+
+    assert first.state == "completed"
+    assert second.state == "completed"
+
+
 def test_two_workers_cannot_claim_same_job(db_session, project):
     due_job = enqueue_unique("publish", "project", project.id, utcnow())
 

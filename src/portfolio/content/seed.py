@@ -26,10 +26,10 @@ def seed_initial_content() -> int:
     records: list[object] = [
         SiteProfile(
             display_name="Jeremy Guill",
-            headline="I build practical software for real-world problems.",
+            headline="I build practical software that makes real work easier to run.",
             summary=(
-                "Technology professional with experience across custom software, database "
-                "workflows, technical support, business operations, and customer service."
+                "Portfolio of custom software, database workflows, automation, technical "
+                "support, business operations, and user-focused implementation work."
             ),
             email="rbtm2006@me.com",
             location="Dallas, Oregon",

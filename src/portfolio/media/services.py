@@ -14,7 +14,7 @@ from portfolio.content.models import Project
 from portfolio.extensions import db
 
 from .models import MediaAsset
-from .validation import ValidatedUpload
+from .validation import ValidatedUpload, validate_upload
 from .variants import (
     _fsync_directory,
     _fsync_file,
@@ -101,6 +101,21 @@ def store_image(upload: ValidatedUpload, metadata: MediaMetadata) -> MediaAsset:
         _remove_empty_directory(root / ".tmp")
 
 
+def store_upload_file(
+    stream,
+    filename: str,
+    mime_type: str,
+    *,
+    alt_text: str = "",
+    caption: str = "",
+    private: bool = True,
+) -> MediaAsset:
+    validated = validate_upload(stream, filename, mime_type)
+    return store_image(
+        validated, MediaMetadata(alt_text=alt_text, caption=caption, private=private)
+    )
+
+
 def delete_media(asset_id) -> None:
     asset = db.session.get(MediaAsset, asset_id)
     if asset is None:
@@ -111,6 +126,22 @@ def delete_media(asset_id) -> None:
     ).first()
     if in_use is not None:
         raise MediaInUse("Media asset is referenced by published content")
+
+    from portfolio.content.models import Experience, ProjectGalleryItem
+
+    gallery_use = db.session.execute(
+        select(ProjectGalleryItem.project_id)
+        .where(ProjectGalleryItem.media_id == asset.id)
+        .limit(1)
+    ).first()
+    if gallery_use is not None:
+        raise MediaInUse("Media asset is used in a project gallery")
+
+    experience_use = db.session.execute(
+        select(Experience.id).where(Experience.logo_media_id == asset.id).limit(1)
+    ).first()
+    if experience_use is not None:
+        raise MediaInUse("Media asset is used as an experience logo")
 
     root = media_root()
     original_path = root / asset.storage_key
@@ -134,13 +165,18 @@ def list_media() -> list[MediaAsset]:
 
 
 def _save_original(image: Image.Image, path: Path, mime_type: str) -> None:
-    image = image.convert("RGB")
     if mime_type == "image/png":
-        image.save(path, format="PNG", optimize=True)
+        if image.mode == "RGBA":
+            image.save(path, format="PNG", optimize=True)
+        else:
+            image.convert("RGB").save(path, format="PNG", optimize=True)
     elif mime_type == "image/webp":
-        image.save(path, format="WEBP", quality=92, method=6)
+        if image.mode == "RGBA":
+            image.save(path, format="WEBP", quality=92, method=6)
+        else:
+            image.convert("RGB").save(path, format="WEBP", quality=92, method=6)
     else:
-        image.save(path, format="JPEG", quality=92, optimize=True)
+        image.convert("RGB").save(path, format="JPEG", quality=92, optimize=True)
     _fsync_file(path)
 
 

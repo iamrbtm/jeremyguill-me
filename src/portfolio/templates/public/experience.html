@@ -2,12 +2,30 @@
 {% block title %}Experience | Jeremy Guill{% endblock %}
 {% block content %}
 <section class="page-section">
-  <h1>Technical Experience</h1>
-  {% for item in view.experience %}
-    <article class="timeline-item">
-      <h2>{{ item.role }} · {{ item.organization }}</h2>
-      <p>{{ item.summary }}</p>
-    </article>
-  {% endfor %}
+  <h1>Experience and technical background</h1>
+  <div class="experience-list">
+    {% for item in view.experience %}
+      <article class="mini-timeline">
+        <header class="mini-timeline-header">
+          <div class="mini-timeline-copy">
+            <p class="time">{{ item.start_date or "Current" }}{% if item.end_date %} - {{ item.end_date }}{% endif %}</p>
+            <h3>{{ item.role }}</h3>
+            <p>{{ item.organization }}</p>
+          </div>
+          {% if item.logo_media_id %}
+            <img class="mini-timeline-logo" src="/media/public/{{ item.logo_media_id }}/profile.webp" alt="{{ item.organization }} logo" loading="lazy" height="100">
+          {% endif %}
+        </header>
+        {% if item.summary %}
+          <p>{{ item.summary }}</p>
+        {% endif %}
+        {% if item.rendered_html %}
+          <div class="mini-timeline-markdown">
+            {{ item.rendered_html|safe }}
+          </div>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
 </section>
 {% endblock %}

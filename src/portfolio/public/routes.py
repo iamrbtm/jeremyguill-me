@@ -1,15 +1,24 @@
-from flask import Blueprint, abort, jsonify, redirect, render_template
+from flask import Blueprint, abort, jsonify, redirect, render_template, send_from_directory
 from sqlalchemy import select
 
 from portfolio.content.enums import PublicationState
 from portfolio.content.models import Project
 from portfolio.extensions import db
-from portfolio.public.view_models import build_home_view
+from portfolio.media.models import MediaAsset
+from portfolio.media.variants import media_root
+from portfolio.public.view_models import build_home_view, published_projects
 from portfolio.security.validation import safe_redirect_target
 from portfolio.seo.schemas import SeoPage
 from portfolio.seo.services import build_metadata, resolve_redirect_chain
 
 public_bp = Blueprint("public", __name__)
+
+
+@public_bp.get("/media/<path:filename>")
+def serve_public_media(filename: str):
+    if ".." in filename or not filename.startswith("public/"):
+        abort(404)
+    return send_from_directory(media_root(), filename)
 
 
 @public_bp.route("/health/live")
@@ -22,15 +31,36 @@ def home():
     view = build_home_view()
     metadata = build_metadata(
         SeoPage(
-            title="Jeremy Guill | Practical Software Builder",
+            title="Jeremy Guill | Software and Workflow Portfolio",
             summary=view.profile.summary
-            or "Practical software, database workflows, and implementation support.",
+            or "Portfolio of practical software, database workflows, automation, and implementation support.",
             canonical_path="/",
             is_published=True,
             kind="person",
+            seo_title=view.profile.seo_title,
+            seo_description=view.profile.seo_description,
         )
     )
     return render_template("public/home.html", view=view, metadata=metadata)
+
+
+@public_bp.get("/work")
+def work_index():
+    projects = published_projects()
+    metadata = build_metadata(
+        SeoPage(
+            title="Work | Jeremy Guill",
+            summary=(
+                "Projects across scheduling automation, lending-library systems, "
+                "FileMaker workflows, and database-backed operations."
+            ),
+            canonical_path="/work",
+            is_published=True,
+        )
+    )
+    return render_template(
+        "public/work.html", projects=projects, view=build_home_view(), metadata=metadata
+    )
 
 
 @public_bp.get("/work/<slug>")
@@ -51,10 +81,21 @@ def project_detail(slug: str):
             canonical_path=f"/work/{project.slug}",
             is_published=True,
             kind="project",
+            seo_title=project.seo_title,
+            seo_description=project.seo_description,
         )
     )
+    hero_asset = (
+        db.session.get(MediaAsset, project.hero_media_id) if project.hero_media_id else None
+    )
+    gallery = project.gallery_assets()
     return render_template(
-        "public/project.html", project=project, view=build_home_view(), metadata=metadata
+        "public/project.html",
+        project=project,
+        hero_asset=hero_asset,
+        gallery=gallery,
+        view=build_home_view(),
+        metadata=metadata,
     )
 
 
@@ -78,7 +119,7 @@ def contact():
     metadata = build_metadata(
         SeoPage(
             title="Contact | Jeremy Guill",
-            summary="Start a conversation with Jeremy Guill about practical software work.",
+            summary="Connect with Jeremy Guill about portfolio projects, software work, and technical collaboration.",
             canonical_path="/contact",
             is_published=True,
         )

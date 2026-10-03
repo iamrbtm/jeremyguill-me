@@ -1,4 +1,4 @@
-document.querySelectorAll<HTMLElement>("[data-ai-revision]").forEach((panel) => {
+document.querySelectorAll("[data-ai-revision]").forEach((panel) => {
   panel.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement) || !target.dataset.aiAction) return;

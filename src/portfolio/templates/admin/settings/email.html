@@ -4,6 +4,34 @@
 <section class="admin-panel">
   <p class="eyebrow">Settings</p>
   <h1>Email delivery</h1>
-  <p>SMTP settings are read from environment-backed configuration and secrets.</p>
+  <p>Store the SMTP server used for contact form notifications and weekly SEO summaries. Passwords are encrypted and never shown back.</p>
+  {% if message %}<div class="alert" role="status">{{ message }}</div>{% endif %}
+  {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+
+  <form method="post" action="{{ url_for('integrations.save_email_settings') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>SMTP host <input name="host" value="{{ settings.host }}" placeholder="smtp.example.com" required></label>
+    <label>SMTP port <input name="port" inputmode="numeric" value="{{ settings.port }}" required></label>
+    <label>Security
+      <select name="security">
+        <option value="starttls" {% if settings.security == "starttls" %}selected{% endif %}>STARTTLS</option>
+        <option value="ssl" {% if settings.security == "ssl" %}selected{% endif %}>SSL/TLS</option>
+        <option value="none" {% if settings.security == "none" %}selected{% endif %}>None</option>
+      </select>
+    </label>
+    <label>Username <input name="username" value="{{ settings.username }}" autocomplete="username"></label>
+    <label>Password
+      <input name="password" type="password" autocomplete="new-password" placeholder="{% if password_is_saved %}Saved - leave blank to keep current password{% else %}SMTP password{% endif %}">
+    </label>
+    <label>From address <input name="sender" type="email" value="{{ settings.sender }}" required></label>
+    <label>Notification recipient <input name="recipient" type="email" value="{{ settings.recipient }}" required></label>
+    <button type="submit">Save SMTP settings</button>
+  </form>
+
+  <form method="post" action="{{ url_for('integrations.test_email_settings') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Test recipient <input name="test_recipient" type="email" value="{{ settings.recipient }}"></label>
+    <button type="submit">Send test email</button>
+  </form>
 </section>
 {% endblock %}

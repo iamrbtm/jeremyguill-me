@@ -2,9 +2,25 @@
 {% block title %}{{ project.title }} | Jeremy Guill{% endblock %}
 {% block content %}
 <article class="project-detail">
-  <p class="eyebrow">Selected work</p>
+  <p class="eyebrow">Case study</p>
   <h1>{{ project.title }}</h1>
   <p class="lede">{{ project.summary }}</p>
+  {% if hero_asset %}
+    <img class="project-hero" src="/media/public/{{ hero_asset.id }}/hero_desktop.webp"
+         srcset="/media/public/{{ hero_asset.id }}/hero_mobile.webp 900w, /media/public/{{ hero_asset.id }}/hero_desktop.webp 1600w"
+         sizes="(max-width: 54rem) 100vw, 54rem"
+         alt="{{ hero_asset.alt_text }}" loading="eager">
+  {% endif %}
   <div class="prose">{{ project.rendered_html | safe }}</div>
+  {% if gallery %}
+    <section class="project-gallery" aria-label="Project gallery">
+      <h2>Gallery</h2>
+      <div class="gallery-grid">
+        {% for asset in gallery %}
+          <img src="/media/public/{{ asset.id }}/hero_desktop.webp" alt="{{ asset.alt_text }}" loading="lazy">
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
 </article>
 {% endblock %}

@@ -6,29 +6,46 @@
   <section class="admin-panel">
     <p class="eyebrow">Content</p>
     <h1>{{ content_type|title }}</h1>
+    <div class="admin-links">
+      {% if content_type == "projects" %}
+        <a href="{{ url_for('admin.new_project') }}" class="btn btn-primary">New {{ content_type|title }}</a>
+      {% endif %}
+      {% if content_type == "experience" %}
+        <a href="{{ url_for('admin.new_experience') }}" class="btn btn-primary">New Experience</a>
+      {% endif %}
+      {% if content_type == "blog" %}
+        <a href="{{ url_for('admin.new_blog') }}" class="btn btn-primary">New Blog Post</a>
+      {% endif %}
+    </div>
     {% if items %}
       <table>
         <thead>
           <tr>
             <th>Title</th>
+            {% if content_type == "projects" %}<th>Order</th>{% endif %}
             <th>State</th>
             <th>Version</th>
           </tr>
         </thead>
         <tbody>
-          {% for item in items %}
-            <tr>
-              <td>
-                {% if content_type == "projects" %}
-                  <a href="{{ url_for('admin.edit_project', project_id=item.id) }}">{{ item.title }}</a>
-                {% else %}
-                  {{ item.title if item.title is defined else item.role }}
-                {% endif %}
-              </td>
-              <td>{{ item.state.value if item.state is defined else "visible" }}</td>
-              <td>{{ item.version }}</td>
-            </tr>
-          {% endfor %}
+{% for item in items %}
+              <tr>
+                <td>
+                  {% if content_type == "projects" %}
+                    <a href="{{ url_for('admin.edit_project', project_id=item.id) }}">{{ item.title }}</a>
+                  {% elif content_type == "experience" %}
+                    <a href="{{ url_for('admin.edit_experience', experience_id=item.id) }}">{{ item.role }} at {{ item.organization }}</a>
+                  {% elif content_type == "blog" %}
+                    <a href="{{ url_for('admin.edit_blog', blog_id=item.id) }}">{{ item.title }}</a>
+                  {% else %}
+                    {{ item.title if item.title is defined else item.role }}
+                  {% endif %}
+                </td>
+                {% if content_type == "projects" or content_type == "experience" %}<td>{{ item.sort_position }}</td>{% endif %}
+                <td>{{ item.state.value if item.state is defined else ("visible" if item.visible else "hidden") }}</td>
+                <td>{{ item.version }}</td>
+              </tr>
+           {% endfor %}
         </tbody>
       </table>
     {% else %}

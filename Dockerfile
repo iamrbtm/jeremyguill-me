@@ -1,10 +1,3 @@
-FROM node:24-alpine AS assets
-WORKDIR /build
-COPY package.json package-lock.json vite.config.ts ./
-RUN npm ci
-COPY src/portfolio/static_src ./src/portfolio/static_src
-RUN npm run build
-
 FROM python:3.14-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -22,11 +15,10 @@ RUN uv sync --frozen --no-dev \
     && mkdir -p /app/var/static /app/var/media \
     && chown -R portfolio:portfolio /app
 
-COPY --from=assets /build/src/portfolio/static /app/bundled_static
 COPY docker/entrypoint.sh /app/docker/entrypoint.sh
 RUN chmod +x /app/docker/entrypoint.sh
 
 USER portfolio
 EXPOSE 7777
 ENTRYPOINT ["/app/docker/entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:7777", "portfolio:create_app()"]
+CMD ["gunicorn", "--bind", "0.0.0.0:7777", "--timeout", "120", "portfolio:create_app()"]

@@ -71,6 +71,21 @@ def test_edit_project_creates_revision_and_audit_event(authenticated_client, db_
     assert event.target_id == str(project.id)
 
 
+def test_edit_project_accepts_sanitized_html(authenticated_client, db_session, project):
+    source = '<div class="csl-entry"><span>Author.</span> <i>Title</i>.</div>'
+
+    response = authenticated_client.post(
+        f"/admin/projects/{project.id}",
+        data=project_form(project, source_markdown=source),
+    )
+
+    assert response.status_code == 302
+    db.session.refresh(project)
+    assert project.source_markdown == source
+    assert '<div class="csl-entry">' in project.rendered_html
+    assert "<i>Title</i>" in project.rendered_html
+
+
 def test_project_edit_rejects_concurrent_update(authenticated_client, db_session, project):
     project.version = 3
     db.session.commit()
@@ -140,3 +155,115 @@ def test_admin_project_list_is_ordered(authenticated_client, db_session):
 
     assert response.status_code == 200
     assert response.data.index(b"First") < response.data.index(b"Later")
+
+
+def test_new_project_at_existing_position_shifts_others(authenticated_client, db_session):
+    existing = Project(
+        title="Existing",
+        slug="existing",
+        summary="",
+        source_markdown="Body",
+        rendered_html="<p>Body</p>",
+        state=PublicationState.DRAFT,
+        sort_position=0,
+    )
+    db.session.add(existing)
+    db.session.commit()
+
+    response = authenticated_client.post(
+        "/admin/projects",
+        data={
+            "title": "New",
+            "slug": "new",
+            "summary": "",
+            "source_markdown": "New body",
+            "order": "0",
+            "version": "0",
+        },
+    )
+
+    assert response.status_code == 302
+    db.session.refresh(existing)
+    assert existing.sort_position == 1
+
+
+def test_new_project_at_unused_position_does_not_shift(authenticated_client, db_session):
+    existing = Project(
+        title="Existing",
+        slug="existing",
+        summary="",
+        source_markdown="Body",
+        rendered_html="<p>Body</p>",
+        state=PublicationState.DRAFT,
+        sort_position=1,
+    )
+    db.session.add(existing)
+    db.session.commit()
+
+    response = authenticated_client.post(
+        "/admin/projects",
+        data={
+            "title": "New",
+            "slug": "new",
+            "summary": "",
+            "source_markdown": "New body",
+            "order": "0",
+            "version": "0",
+        },
+    )
+
+    assert response.status_code == 302
+    db.session.refresh(existing)
+    assert existing.sort_position == 1
+
+
+def test_update_project_at_existing_position_shifts_others(authenticated_client, db_session):
+    first = Project(
+        title="First",
+        slug="first",
+        summary="",
+        source_markdown="Body",
+        rendered_html="<p>Body</p>",
+        state=PublicationState.DRAFT,
+        sort_position=0,
+    )
+    second = Project(
+        title="Second",
+        slug="second",
+        summary="",
+        source_markdown="Body",
+        rendered_html="<p>Body</p>",
+        state=PublicationState.DRAFT,
+        sort_position=1,
+    )
+    third = Project(
+        title="Third",
+        slug="third",
+        summary="",
+        source_markdown="Body",
+        rendered_html="<p>Body</p>",
+        state=PublicationState.DRAFT,
+        sort_position=2,
+    )
+    db.session.add_all([first, second, third])
+    db.session.commit()
+
+    response = authenticated_client.post(
+        f"/admin/projects/{first.id}",
+        data={
+            "title": "First",
+            "slug": "first",
+            "summary": "",
+            "source_markdown": "Updated body",
+            "order": "1",
+            "version": str(first.version),
+        },
+    )
+
+    assert response.status_code == 302
+    db.session.refresh(first)
+    db.session.refresh(second)
+    db.session.refresh(third)
+    assert first.sort_position == 1
+    assert second.sort_position == 2
+    assert third.sort_position == 3

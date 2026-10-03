@@ -25,7 +25,7 @@ def submit_contact():
     metadata = build_metadata(
         SeoPage(
             title="Contact | Jeremy Guill",
-            summary="Start a conversation with Jeremy Guill about practical software work.",
+            summary="Connect with Jeremy Guill about portfolio projects, software work, and technical collaboration.",
             canonical_path="/contact",
             is_published=True,
         )

@@ -26,7 +26,7 @@ def test_build_home_view_exposes_only_published_featured_projects(app, db_sessio
     with app.app_context():
         view = build_home_view()
 
-    assert [project.slug for project in view.featured_projects] == ["published"]
+    assert [project.slug for project in view.home_projects] == ["published"]
 
 
 def test_build_home_view_hides_empty_blog(app, db_session):
@@ -50,3 +50,45 @@ def test_build_home_view_shows_published_blog(app, db_session):
         view = build_home_view()
 
     assert view.show_blog is True
+
+
+def test_home_shows_first_three_ordered_projects(app, db_session):
+    db_session.add(SiteProfile())
+    for index, slug in enumerate(["c", "a", "b", "d", "e"]):
+        db_session.add(
+            Project(
+                title=slug,
+                slug=slug,
+                summary=f"{slug} summary",
+                state=PublicationState.PUBLISHED,
+                sort_position=index,
+            )
+        )
+    db_session.commit()
+
+    with app.app_context():
+        view = build_home_view()
+
+    slugs = [project.slug for project in view.home_projects]
+    assert slugs == ["c", "a", "b"]
+    assert view.has_more_projects is True
+
+
+def test_home_hides_more_button_when_three_or_fewer(app, db_session):
+    db_session.add(SiteProfile())
+    for slug in ["a", "b"]:
+        db_session.add(
+            Project(
+                title=slug,
+                slug=slug,
+                summary=f"{slug} summary",
+                state=PublicationState.PUBLISHED,
+                sort_position=0,
+            )
+        )
+    db_session.commit()
+
+    with app.app_context():
+        view = build_home_view()
+
+    assert view.has_more_projects is False

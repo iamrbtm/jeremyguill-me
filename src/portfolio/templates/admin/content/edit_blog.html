@@ -1,0 +1,73 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit {{ entity.title if entity else "New blog post" }}{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">{{ content_type|title }}</p>
+    <h1>{% if is_new %}New blog post{% else %}Edit {{ entity.title }}{% endif %}</h1>
+    {% if entity %}
+      <p class="state-badge">State: {{ entity.state.value }}</p>
+    {% endif %}
+    {% if seo_message %}
+      <div class="alert alert-success" role="status">{{ seo_message }}</div>
+    {% endif %}
+    {% if seo_error %}
+      <div class="alert" role="alert">AI SEO could not be applied: {{ seo_error }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="alert" role="alert">{{ error }}</div>
+    {% endif %}
+    {% if conflict %}
+      <div class="alert" role="alert">Content changed while you were editing. Review the latest record before saving again.</div>
+    {% endif %}
+    {% if form.errors %}
+      <div class="alert" role="alert">
+        {% for messages in form.errors.values() %}
+          {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="admin-links">
+      {% if entity %}
+        <a href="{{ url_for('admin.blog') }}">Back to blog</a>
+      {% endif %}
+    </div>
+    <form method="post" enctype="multipart/form-data"
+          action="{{ url_for('admin.create_blog') if is_new else url_for('admin.update_blog', blog_id=entity.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="version" value="{{ form.version }}">
+      <div class="field-row">
+        <label>Title <input name="title" value="{{ form.title }}" required></label>
+        <label>Slug <input name="slug" value="{{ form.slug }}" required></label>
+      </div>
+      <label>Summary <textarea name="summary" maxlength="320">{{ form.summary }}</textarea></label>
+
+      <fieldset class="admin-seo">
+        <legend>SEO (editable, also updated by AI)</legend>
+        <label>SEO title <input name="seo_title" value="{{ form.seo_title }}" maxlength="180"></label>
+        <label>SEO description <textarea name="seo_description" maxlength="320">{{ form.seo_description }}</textarea></label>
+        <label>Target search query <input name="seo_target_query" value="{{ form.seo_target_query }}" maxlength="180"></label>
+      </fieldset>
+
+      <label>Markdown or HTML</label>
+      {% with name="source_markdown", value=form.source_markdown %}
+        {% include "admin/components/editor.html" %}
+      {% endwith %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save draft</button>
+        {% if entity %}
+          <button type="submit" formaction="{{ url_for('admin.optimize_blog', blog_id=entity.id) }}" class="btn btn-secondary" formnovalidate>Run AI SEO</button>
+          <button type="submit" formaction="{{ url_for('admin.publish_blog', blog_id=entity.id) }}" class="btn btn-primary" formnovalidate>Publish</button>
+          <button type="submit" formaction="{{ url_for('admin.archive_blog', blog_id=entity.id) }}" class="btn btn-danger" formnovalidate>Archive</button>
+          <button type="submit" formaction="{{ url_for('admin.restore_blog', blog_id=entity.id) }}" class="btn btn-secondary" formnovalidate>Restore to draft</button>
+          <button type="submit" formaction="{{ url_for('admin.delete_blog', blog_id=entity.id) }}" class="btn btn-danger" formnovalidate onclick="return confirm('Delete this blog post?')">Delete</button>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script type="module" src="{{ url_for('static', filename='assets/editor.js') }}"></script>
+{% endblock %}

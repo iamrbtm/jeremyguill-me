@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
+import os
 import uuid
+from dataclasses import asdict
 
 import httpx
 from flask import current_app
@@ -13,7 +16,7 @@ from portfolio.extensions import db
 
 from .crypto import decrypt_secret, encrypt_secret
 from .models import AiRevisionSuggestion, IntegrationSecret
-from .nvidia import NvidiaClient, RevisionRequest, hash_source
+from .openai import OpenAIClient, RevisionRequest, hash_source
 
 
 class IntegrationNotConfigured(RuntimeError):
@@ -24,22 +27,65 @@ class RevisionConflict(ValueError):
     pass
 
 
-def save_nvidia_key(api_key: str, client: NvidiaClient | None = None) -> list[object]:
-    client = client or NvidiaClient()
-    models = client.validate_key(api_key)
-    secret = IntegrationSecret.query.filter_by(name="nvidia_api_key").one_or_none()
-    if secret is None:
-        secret = IntegrationSecret(name="nvidia_api_key", encrypted_value=b"")
-        db.session.add(secret)
-    secret.encrypted_value = encrypt_secret(api_key)
-    secret.key_hint = api_key[-4:]
-    secret.version = (secret.version or 1) + 1
+def load_openai_model() -> str:
+    return _load_secret_value(
+        "openai_model", current_app.config.get("OPENAI_MODEL", "gpt-4o-mini")
+    )
+
+
+def load_openai_models() -> list[dict[str, object]]:
+    raw = _load_secret_value("openai_models", "[]")
+    try:
+        models = json.loads(raw)
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(models, list):
+        return []
+    clean_models: list[dict[str, object]] = []
+    for model in models:
+        if not isinstance(model, dict):
+            continue
+        model_id = str(model.get("id", "")).strip()
+        if not model_id:
+            continue
+        clean_models.append(
+            {
+                "id": model_id,
+                "enabled": bool(model.get("enabled", False)),
+                "disabled_reason": str(model.get("disabled_reason", "")),
+            }
+        )
+    return clean_models
+
+
+def save_openai_model(model: str) -> str:
+    clean_model = model.strip()[:160]
+    if not clean_model:
+        raise ValueError("OpenAI model is required")
+    _save_secret_value("openai_model", clean_model)
     record_event(
-        action="nvidia.key.validated",
+        action="openai.model.saved",
         actor="admin",
         target_type="integration",
-        target_id="nvidia",
-        metadata={"key_hint": secret.key_hint},
+        target_id="openai",
+        metadata={"model": clean_model},
+    )
+    db.session.commit()
+    return clean_model
+
+
+def save_openai_key(api_key: str, client: OpenAIClient | None = None) -> list[object]:
+    client = client or OpenAIClient()
+    models = client.validate_key(api_key)
+    key_hint = api_key[-4:]
+    _save_secret_value("openai_api_key", api_key, key_hint=key_hint)
+    _save_secret_value("openai_models", json.dumps([asdict(model) for model in models]))
+    record_event(
+        action="openai.key.validated",
+        actor="admin",
+        target_type="integration",
+        target_id="openai",
+        metadata={"key_hint": key_hint},
     )
     db.session.commit()
     return models
@@ -51,10 +97,10 @@ def request_revision(
     if entity_type != "project":
         raise ValueError("Unsupported AI revision entity")
     project = db.get_or_404(Project, entity_id)
-    api_key = _nvidia_api_key()
-    model = current_app.config.get("NVIDIA_MODEL", "meta/llama-3.1-70b-instruct")
+    api_key = openai_api_key()
+    model = load_openai_model()
     try:
-        revision = NvidiaClient().revise(
+        revision = OpenAIClient(base_url=os.getenv("OPENAI_BASE_URL")).revise(
             RevisionRequest(
                 api_key=api_key,
                 model=model,
@@ -121,8 +167,28 @@ def reject_revision(suggestion_id: uuid.UUID) -> None:
     db.session.commit()
 
 
-def _nvidia_api_key() -> str:
-    secret = IntegrationSecret.query.filter_by(name="nvidia_api_key").one_or_none()
+def openai_api_key() -> str:
+    env_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if env_key:
+        return env_key
+    secret = IntegrationSecret.query.filter_by(name="openai_api_key").one_or_none()
     if secret is None:
-        raise IntegrationNotConfigured("NVIDIA API key is not configured")
+        raise IntegrationNotConfigured("OpenAI API key is not configured")
     return decrypt_secret(secret.encrypted_value)
+
+
+def _load_secret_value(name: str, default: str = "") -> str:
+    secret = IntegrationSecret.query.filter_by(name=name).one_or_none()
+    if secret is None:
+        return default
+    return decrypt_secret(secret.encrypted_value)
+
+
+def _save_secret_value(name: str, value: str, *, key_hint: str | None = None) -> None:
+    secret = IntegrationSecret.query.filter_by(name=name).one_or_none()
+    if secret is None:
+        secret = IntegrationSecret(name=name, encrypted_value=b"")
+        db.session.add(secret)
+    secret.encrypted_value = encrypt_secret(value)
+    secret.key_hint = key_hint
+    secret.version = (secret.version or 1) + 1

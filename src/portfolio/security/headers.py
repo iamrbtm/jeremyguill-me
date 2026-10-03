@@ -6,7 +6,7 @@ SECURITY_HEADERS = {
     "Content-Security-Policy": (
         "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; "
         "img-src 'self' data:; font-src 'self'; object-src 'none'; script-src 'self'; "
-        "style-src 'self'; connect-src 'self' https://integrate.api.nvidia.com"
+        "style-src 'self'; connect-src 'self' https://api.openai.com"
     ),
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "X-Content-Type-Options": "nosniff",

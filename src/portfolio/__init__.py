@@ -20,7 +20,9 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
         WEBAUTHN_RP_ID=settings.rp_id,
         RATELIMIT_STORAGE_URI=settings.rate_limit_storage_uri,
         SETTINGS_ENCRYPTION_KEY=settings.settings_encryption_key,
-        NVIDIA_MODEL=settings.nvidia_model,
+        OPENAI_MODEL=settings.openai_model,
+        ADMIN_USERNAME=settings.admin_username,
+        ADMIN_PASSWORD_HASH=settings.admin_password_hash,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Strict",
         SESSION_COOKIE_SECURE=settings.app_env == "production",
@@ -94,5 +96,6 @@ def import_models() -> None:
         "portfolio.integrations.models",
         "portfolio.jobs.models",
         "portfolio.media.models",
+        "portfolio.seo.models",
     ):
         import_module(module_name)

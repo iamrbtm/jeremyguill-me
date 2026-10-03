@@ -16,11 +16,10 @@ def test_editor_contract_accepts_supported_markdown():
     assert validate_editor_source(source).valid is True
 
 
-def test_editor_contract_rejects_raw_html():
+def test_editor_contract_accepts_raw_html():
     result = validate_editor_source("<iframe src='https://evil.example'></iframe>")
 
-    assert result.valid is False
-    assert "Raw HTML is not supported." in result.errors
+    assert result.valid is True
 
 
 def test_editor_contract_rejects_oversized_source():
@@ -35,6 +34,7 @@ def test_editor_contract_rejects_oversized_source():
     [
         "![x](javascript:alert(1))",
         "![x](https://evil.example/tracker.png)",
+        '<img src="https://evil.example/tracker.png" alt="x">',
     ],
 )
 def test_editor_contract_rejects_unapproved_image_targets(source: str):
@@ -49,10 +49,14 @@ def test_save_draft_uses_editor_contract(db_session):
     db.session.add(project)
     db.session.commit()
 
-    with pytest.raises(ContentValidationError, match="Raw HTML"):
+    with pytest.raises(ContentValidationError, match="Images"):
         save_draft(
             project,
-            ContentCommand(title="Unsafe", summary="Unsafe", source_markdown="<script></script>"),
+            ContentCommand(
+                title="Unsafe",
+                summary="Unsafe",
+                source_markdown='<img src="https://evil.example/tracker.png" alt="x">',
+            ),
         )
     db.session.refresh(project)
     assert project.title == "Old"

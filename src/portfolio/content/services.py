@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from sqlalchemy import select, update
+
 from portfolio.audit.services import record_event
 from portfolio.content.editor_contract import validate_editor_source
 from portfolio.content.enums import PublicationState
@@ -33,6 +35,27 @@ def save_draft(entity: object, command: ContentCommand, *, expected_version: int
     entity.rendered_html = render_markdown(command.source_markdown)
     if command.slug:
         entity.slug = command.slug.strip()
+    if command.order is not None and hasattr(entity, "sort_position"):
+        entity_class = type(entity)
+        has_collision = db.session.execute(
+            select(entity_class.id)
+            .where(
+                entity_class.sort_position == command.order,
+                entity_class.id != entity.id,
+            )
+            .limit(1)
+        ).scalars().first() is not None
+        if has_collision:
+            db.session.execute(
+                update(entity_class)
+                .where(
+                    entity_class.sort_position >= command.order,
+                    entity_class.id != entity.id,
+                )
+                .values(sort_position=entity_class.sort_position + 1)
+            )
+        entity.sort_position = command.order
+    db.session.add(entity)
     entity.version += 1
     create_revision(entity, reason="draft-save")
     record_event(

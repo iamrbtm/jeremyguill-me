@@ -7,8 +7,18 @@
   </head>
   <body>
     <main>
-      <h1>Enroll two passkeys</h1>
-      <p>This restricted bootstrap session cannot access normal administration.</p>
+      <h1>Open portfolio admin</h1>
+      {% if token_is_valid %}
+        <p>This one-time console link will sign you into the admin dashboard for 24 hours.</p>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="token" value="{{ token }}">
+          <button type="submit">Open admin dashboard</button>
+        </form>
+      {% else %}
+        <p>This admin access link is missing, expired, or already used.</p>
+        <p>Generate a new link from the server console.</p>
+      {% endif %}
     </main>
   </body>
 </html>

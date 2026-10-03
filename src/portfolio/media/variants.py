@@ -28,7 +28,14 @@ class MediaVariant:
 
 
 def media_root() -> Path:
-    return Path(current_app.config.get("MEDIA_ROOT", "var/media"))
+    raw = current_app.config.get("MEDIA_ROOT", "var/media")
+    path = Path(raw)
+    if not path.is_absolute():
+        # Anchor relative paths to the project root (two levels above the
+        # portfolio package directory) so media is found regardless of the
+        # process working directory.
+        path = Path(current_app.root_path).resolve().parents[1] / raw
+    return path
 
 
 def generate_variants(asset) -> list[MediaVariant]:
@@ -57,7 +64,10 @@ def write_variants_for_image(image: Image.Image, asset_id, output_dir: Path) -> 
     for name, (width, height) in VARIANT_SPECS.items():
         variant = _resize_crop(image, width, height)
         path = output_dir / f"{name}.webp"
-        variant.save(path, format="WEBP", quality=86, method=6)
+        if variant.mode == "RGBA":
+            variant.save(path, format="WEBP", quality=86, method=6, lossless=False)
+        else:
+            variant.save(path, format="WEBP", quality=86, method=6)
         _fsync_file(path)
         variants.append(
             MediaVariant(
@@ -74,7 +84,8 @@ def write_variants_for_image(image: Image.Image, asset_id, output_dir: Path) -> 
 
 
 def _resize_crop(image: Image.Image, width: int, height: int) -> Image.Image:
-    source = image.convert("RGB")
+    has_alpha = image.mode == "RGBA"
+    source = image.convert("RGBA") if has_alpha else image.convert("RGB")
     source_ratio = source.width / source.height
     target_ratio = width / height
     if source_ratio > target_ratio:
@@ -85,7 +96,10 @@ def _resize_crop(image: Image.Image, width: int, height: int) -> Image.Image:
         crop_height = round(source.width / target_ratio)
         top = max((source.height - crop_height) // 2, 0)
         box = (0, top, source.width, top + crop_height)
-    return source.crop(box).resize((width, height), Image.Resampling.LANCZOS)
+    cropped = source.crop(box).resize((width, height), Image.Resampling.LANCZOS)
+    if has_alpha:
+        return cropped
+    return cropped.convert("RGB")
 
 
 def _fsync_file(path: Path) -> None:
