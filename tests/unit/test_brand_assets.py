@@ -44,3 +44,23 @@ def test_homepage_without_portrait_file_renders_no_broken_image(client):
     html = client.get("/").get_data(as_text=True)
 
     assert "jeremyguill_profile.jpg" not in html
+
+
+def test_portrait_files_are_webp_and_match_homepage_dimensions(client):
+    import re
+
+    html = client.get("/").get_data(as_text=True)
+    tag = re.search(r'<img class="split-detail__image"[^>]*>', html)
+    assert tag is not None
+    attrs = dict(re.findall(r'([\w-]+)="([^"]*)"', tag.group(0)))
+    assert attrs["alt"] == "Jeremy Guill"
+
+    with Image.open(IMG / "jeremyguill_profile.webp") as main:
+        assert main.format == "WEBP"
+        assert (int(attrs["width"]), int(attrs["height"])) == main.size
+        assert "jeremyguill_profile.webp" in attrs["srcset"]
+        assert f"{main.width}w" in attrs["srcset"]
+    with Image.open(IMG / "jeremyguill_profile-600.webp") as small:
+        assert small.format == "WEBP"
+        assert f"{small.width}w" in attrs["srcset"]
+    assert (IMG / "jeremyguill_profile.webp").stat().st_size < 250_000
