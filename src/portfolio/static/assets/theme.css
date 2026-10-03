@@ -1,0 +1,59 @@
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #eef1f6;
+    --ink-soft: #c2c8d2;
+    --paper: #14161a;
+    --gray: #1c1f25;
+    --line: #333a44;
+    --blue: #9db8ff;
+    --blue-bright: #86a8ff;
+    color-scheme: dark;
+  }
+
+  .project-card2,
+  .tag-list li,
+  .glance,
+  .toc,
+  .case-cta { background: var(--gray); border-color: var(--line); }
+
+  /* Hard-coded light surfaces in site.css */
+  .service-card { background: var(--gray); border-color: var(--line); }
+  input,
+  textarea { background: var(--gray); border-color: var(--line); color: var(--ink); }
+  .alert { background: #3a1217; border-color: #ff8a98; color: #ffc2ca; }
+  .prose code { background: rgba(255, 255, 255, .1); }
+
+  /* Light tokens used as button/CTA fills need dark text for contrast */
+  .button-primary { color: var(--paper); }
+  .button-primary:hover { color: var(--blue-bright); }
+  .mark-hero .button-primary:hover { color: #fff; }
+  .primary-nav a.nav-cta,
+  .primary-nav a.nav-cta:hover { color: var(--paper); }
+
+  .notice { background: #12301f; color: #bfe8d0; border-color: #2fae6b; }
+
+  img { filter: brightness(.92); }
+}
+
+.notice:focus-visible { outline: 3px solid var(--blue-bright); outline-offset: 2px; }
+
+@media print {
+  .site-header,
+  .site-footer__links,
+  .nav-toggle,
+  .hero-actions,
+  .case-cta,
+  .project-pager,
+  .skip-link { display: none !important; }
+
+  .reveal,
+  .js .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  body { background: #fff; color: #000; font-size: 11pt; }
+  a { color: #000; text-decoration: underline; }
+  .prose a[href^="http"]::after { content: " (" attr(href) ")"; font-size: .85em; }
+  .site-main { padding-top: 0; }
+}
