@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import click
 
 from portfolio.content.enums import PublicationState
@@ -17,6 +20,20 @@ def content_cli() -> None:
 def seed_initial_command() -> None:
     created = seed_initial_content()
     click.echo(f"seeded {created} records")
+
+
+@content_cli.command("export-site")
+@click.option("--output", type=click.Path(dir_okay=False, path_type=Path), default=None)
+def export_site_command(output: Path | None) -> None:
+    """Print (or write) the public site-content JSON used by the one-page site."""
+    from portfolio.public.site_export import build_site_export
+
+    text = json.dumps(build_site_export(), indent=2, ensure_ascii=False)
+    if output is None:
+        click.echo(text)
+    else:
+        output.write_text(text + "\n", encoding="utf-8")
+        click.echo(f"wrote {output}")
 
 
 @content_cli.command("set-profile")

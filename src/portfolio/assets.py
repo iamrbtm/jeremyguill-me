@@ -35,6 +35,15 @@ def apply_cache_headers(response: Response) -> Response:
     return response
 
 
+def apply_font_cors(response: Response) -> Response:
+    if request.endpoint == "static" and response.status_code in (200, 304):
+        filename = (request.view_args or {}).get("filename", "")
+        if str(filename).startswith("assets/fonts/"):
+            response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
 def init_assets(app: Flask) -> None:
     app.jinja_env.globals["static_url"] = static_url
     app.after_request(apply_cache_headers)
+    app.after_request(apply_font_cors)

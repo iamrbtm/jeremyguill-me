@@ -92,6 +92,26 @@ def get_profile() -> SiteProfile:
     return profile
 
 
+def default_capabilities() -> list[CapabilityView]:
+    return [
+        CapabilityView(
+            "Workflow-aware software",
+            "Custom tools and automations shaped around real operational steps, "
+            "constraints, and users.",
+        ),
+        CapabilityView(
+            "Database-backed operations",
+            "Structured records, reporting needs, and repeatable processes made easier "
+            "to run and review.",
+        ),
+        CapabilityView(
+            "Implementation mindset",
+            "Requirements, practical rollouts, user training, troubleshooting, and "
+            "iteration after launch.",
+        ),
+    ]
+
+
 def build_home_view() -> HomeView:
     all_projects = published_projects()
     home_projects = all_projects[:3]
@@ -146,20 +166,7 @@ def build_home_view() -> HomeView:
     )
     return HomeView(
         profile=get_profile(),
-        capabilities=[
-            CapabilityView(
-                "Workflow-aware software",
-                "Custom tools and automations shaped around real operational steps, constraints, and users.",
-            ),
-            CapabilityView(
-                "Database-backed operations",
-                "Structured records, reporting needs, and repeatable processes made easier to run and review.",
-            ),
-            CapabilityView(
-                "Implementation mindset",
-                "Requirements, practical rollouts, user training, troubleshooting, and iteration after launch.",
-            ),
-        ],
+        capabilities=default_capabilities(),
         home_projects=list(home_projects),
         has_more_projects=len(all_projects) > len(home_projects),
         experience=list(experience),

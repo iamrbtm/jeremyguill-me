@@ -61,11 +61,13 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
     from .media.routes import media_bp
     from .operations.routes import operations_bp
     from .public.blog_routes import blog_bp
+    from .public.export_routes import export_bp
     from .public.routes import public_bp
     from .seo.routes import seo_bp
 
     app.register_blueprint(public_bp)
     app.register_blueprint(blog_bp)
+    app.register_blueprint(export_bp)
     app.register_blueprint(contact_bp)
     app.register_blueprint(operations_bp)
     app.register_blueprint(admin_bp)
