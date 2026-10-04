@@ -94,7 +94,7 @@ def rss():
 
 @seo_bp.get("/.well-known/security.txt")
 def security_txt():
-    expires = (datetime.now(UTC) + timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    expires = (datetime.now(UTC) + timedelta(days=360)).strftime("%Y-%m-%dT%H:%M:%SZ")
     body = (
         f"Contact: {absolute_url('/contact')}\n"
         f"Expires: {expires}\n"

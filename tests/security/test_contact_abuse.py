@@ -24,6 +24,7 @@ def test_honeypot_submission_is_discarded_without_revealing_detection(client):
     response = client.post("/contact", data=payload)
 
     assert response.status_code == 302
+    assert response.headers["Location"].endswith("/contact?sent=1")
     assert ContactSubmission.query.count() == 0
 
 

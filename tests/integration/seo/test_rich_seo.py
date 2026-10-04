@@ -92,6 +92,17 @@ def test_security_txt(client, app):
     assert "Canonical: https://example.test/.well-known/security.txt" in body
 
 
+def test_security_txt_expires_is_within_a_year(client):
+    from datetime import UTC, datetime, timedelta
+
+    body = client.get("/.well-known/security.txt").get_data(as_text=True)
+    value = next(line for line in body.splitlines() if line.startswith("Expires: "))[9:]
+    expires = datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
+    now = datetime.now(UTC)
+
+    assert now < expires < now + timedelta(days=365)
+
+
 def test_project_title_uses_seo_title_when_set(client, db_session):
     db_session.add(
         Project(
