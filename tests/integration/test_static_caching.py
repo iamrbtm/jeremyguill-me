@@ -33,3 +33,13 @@ def test_static_url_for_missing_file_does_not_crash(app):
 
     with app.test_request_context():
         assert static_url("assets/nope.css") == "/static/assets/nope.css"
+
+
+def test_font_preload_matches_font_face_url(client):
+    html = client.get("/").get_data(as_text=True)
+    tag = re.search(r'<link rel="preload"[^>]*open-sans-var[^>]*>', html).group(0)
+    css = client.get("/static/assets/fonts.css").get_data(as_text=True)
+
+    assert 'href="/static/assets/fonts/open-sans-var.woff2"' in tag
+    assert "crossorigin" in tag
+    assert 'url("fonts/open-sans-var.woff2")' in css

@@ -10,7 +10,7 @@
     <link rel="icon" href="{{ static_url('assets/img/favicon-32.png') }}" type="image/png" sizes="32x32">
     <link rel="apple-touch-icon" href="{{ static_url('assets/img/apple-touch-icon.png') }}">
     {% if metadata %}{% include "components/metadata.html" %}{% endif %}
-    <link rel="preload" href="{{ static_url('assets/fonts/open-sans-var.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ url_for('static', filename='assets/fonts/open-sans-var.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ static_url('assets/fonts.css') }}">
     <link rel="stylesheet" href="{{ static_url('assets/site.css') }}">
     <link rel="stylesheet" href="{{ static_url('assets/components.css') }}">
