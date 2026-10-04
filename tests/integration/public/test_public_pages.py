@@ -158,3 +158,12 @@ def test_work_index_lists_published_projects(client, app):
     assert response.status_code == 200
     assert b"Alpha" in response.data
     assert b"Beta" not in response.data
+
+
+def test_500_page_makes_no_notification_claim(app):
+    from flask import render_template
+
+    with app.test_request_context("/"):
+        html = render_template("errors/500.html")
+
+    assert "notified" not in html and "Please try again in a moment." in html
