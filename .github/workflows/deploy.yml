@@ -15,6 +15,8 @@ concurrency:
 
 jobs:
   publish:
+    # workflow_dispatch may be run against any branch; only ever publish reviewed main.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo

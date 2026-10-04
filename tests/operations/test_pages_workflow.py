@@ -91,6 +91,12 @@ def test_copies_only_one_page_index(text: str) -> None:
     assert "Publish one-page site from ${GITHUB_SHA::7}" in code
 
 
+def test_publish_job_only_runs_on_main(text: str) -> None:
+    assert re.search(
+        r"^  publish:\n(?:    #.*\n)*    if: github\.ref == 'refs/heads/main'\n", text, re.M
+    )
+
+
 def test_workflow_uses_guard_script(text: str) -> None:
     assert "sh scripts/check_one_page.sh" in text
 
@@ -117,7 +123,7 @@ def test_guard_missing_file(tmp_path: Path) -> None:
     assert "::error::" in r.stdout + r.stderr
 
 
-@pytest.mark.parametrize("bad", ["localhost:8000", "127.0.0.1"])
+@pytest.mark.parametrize("bad", ["localhost:8000", "127.0.0.1", "0.0.0.0"])
 def test_guard_rejects_local_hosts(tmp_path: Path, bad: str) -> None:
     r = _run(tmp_path, f"<!DOCTYPE html><html><a href='http://{bad}/'>x</a></html>")
     assert r.returncode != 0
@@ -134,3 +140,13 @@ def test_guard_rejects_missing_doctype(tmp_path: Path) -> None:
 def test_guard_accepts_good_file(tmp_path: Path, doctype: str) -> None:
     r = _run(tmp_path, f"{doctype}<html><body>https://jeremyguill.me</body></html>")
     assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_guard_rejects_symlink(tmp_path: Path) -> None:
+    (tmp_path / "one_page").mkdir()
+    real = tmp_path / "real.html"
+    real.write_text("<!doctype html><html></html>", encoding="utf-8")
+    (tmp_path / "one_page" / "index.html").symlink_to(real)
+    r = _run(tmp_path, None)
+    assert r.returncode != 0
+    assert "::error::" in r.stdout + r.stderr

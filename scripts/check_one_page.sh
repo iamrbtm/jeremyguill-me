@@ -8,12 +8,16 @@ if [ ! -f "$f" ]; then
   echo "::error::$f is missing"
   exit 1
 fi
+if [ -L "$f" ]; then
+  echo "::error::$f is a symlink; refusing to publish"
+  exit 1
+fi
 if ! grep -qi '<!doctype html>' "$f"; then
   echo "::error::$f does not contain <!doctype html>"
   exit 1
 fi
-if grep -qE 'localhost|127\.0\.0\.1' "$f"; then
-  echo "::error::$f references localhost or 127.0.0.1"
+if grep -qE 'localhost|127\.0\.0\.1|0\.0\.0\.0' "$f"; then
+  echo "::error::$f references localhost, 127.0.0.1 or 0.0.0.0"
   exit 1
 fi
 echo "$f passed pre-publish checks"
