@@ -1,0 +1,260 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import re
+import subprocess
+import sys
+from html.parser import HTMLParser
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "scripts" / "build_one_page.py"
+ORIGIN = "https://example.test"
+
+
+def _load():
+    spec = importlib.util.spec_from_file_location("build_one_page", SCRIPT)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["build_one_page"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+bop = _load()
+
+
+def _img(path: str, alt: str, w: int = 1600, h: int = 900) -> dict:
+    return {"url": f"{ORIGIN}/media/public/{path}.webp", "alt": alt, "width": w, "height": h}
+
+
+def make_data() -> dict:
+    return {
+        "generated_at": "2026-10-04T00:00:00+00:00",
+        "origin": ORIGIN,
+        "profile": {
+            "display_name": "Test Person",
+            "headline": "Builds useful software",
+            "summary": "Summary of the profile.",
+            "location": None,
+            "availability_text": "Open to roles",
+            "linkedin_url": "https://www.linkedin.com/in/test",
+            "github_url": None,
+        },
+        "capabilities": [{"title": "Cap A", "body": "Body A"}, {"title": "Cap B", "body": "B"}],
+        "projects": [
+            {
+                "slug": "alpha",
+                "title": "Alpha <b>x</b>",
+                "summary": "Alpha summary",
+                "role": "Developer",
+                "stack": ["Python", "SQL"],
+                "year": "2020",
+                "result_headline": "Saved time",
+                "body_html": (
+                    '<h2 id="dup">Problem</h2><p>Text <a href="#dup">jump</a></p>'
+                    "<table><tr><td>1</td></tr></table>"
+                    '<img src="/media/public/x/hero_desktop.webp" alt="in body" '
+                    'width="10" height="10">'
+                    "<script>alert(1)</script>"
+                ),
+                "url": f"{ORIGIN}/work/alpha",
+                "hero": _img("a/hero", "Alpha hero"),
+                "gallery": [_img("a/g1", "Gallery one")],
+            },
+            {
+                "slug": "beta",
+                "title": "Beta",
+                "summary": "Beta summary",
+                "role": None,
+                "stack": [],
+                "year": None,
+                "result_headline": None,
+                "body_html": '<h2 id="dup">Problem</h2><table><tr><td>2</td></tr></table>',
+                "url": f"{ORIGIN}/work/beta",
+                "hero": None,
+                "gallery": [],
+            },
+        ],
+        "experience": [
+            {
+                "organization": "Acme",
+                "role": "Engineer",
+                "start_date": "2019",
+                "end_date": None,
+                "summary": "Did things",
+                "body_html": "<ul><li>One</li></ul>",
+                "logo": _img("l/profile", "Acme logo", 100, 100),
+            }
+        ],
+    }
+
+
+class _Collect(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.tags: list[tuple[str, dict[str, str | None]]] = []
+
+    def handle_starttag(self, tag, attrs):
+        self.tags.append((tag, dict(attrs)))
+
+
+def parse(html: str) -> list[tuple[str, dict[str, str | None]]]:
+    parser = _Collect()
+    parser.feed(html)
+    return parser.tags
+
+
+@pytest.fixture(scope="module")
+def page() -> str:
+    return bop.build_page(make_data(), origin=ORIGIN)
+
+
+def test_single_h1_and_sections(page):
+    tags = parse(page)
+    assert [t for t, _ in tags].count("h1") == 1
+    ids = [a["id"] for _, a in tags if a.get("id")]
+    for section in ("top", "about", "work", "experience", "contact"):
+        assert section in ids
+
+
+def test_no_blog_and_no_email(page):
+    low = page.lower()
+    assert "/blog" not in low
+    assert "latest writing" not in low
+    assert "mailto:" not in low
+    assert not re.search(r"[\w.+-]+@[\w-]+\.[a-z]{2,}", page)
+
+
+def test_images_have_alt_size_and_absolute_urls(page):
+    imgs = [a for t, a in parse(page) if t == "img"]
+    assert len(imgs) >= 6
+    for attrs in imgs:
+        assert attrs.get("alt"), attrs
+        assert attrs.get("width") and attrs.get("height"), attrs
+        assert (attrs["src"] or "").startswith(ORIGIN + "/"), attrs
+
+
+def test_head_metadata(page):
+    assert f'<link rel="canonical" href="{ORIGIN}/">' in page
+    assert "<title>Test Person | Software and Workflow Portfolio</title>" in page
+    assert f"{ORIGIN}/static/assets/fonts/poppins-600.woff2" in page
+    assert f"{ORIGIN}/static/assets/fonts/poppins-700.woff2" in page
+    assert f"{ORIGIN}/static/assets/fonts/open-sans-var.woff2" in page
+    assert f"{ORIGIN}/static/assets/img/og-default.png" in page
+    assert "font-display: swap" in page
+    assert "generated by scripts/build_one_page.py from" in page
+
+
+def test_cards_templates_and_dialog(page):
+    tags = parse(page)
+    links = [a for t, a in tags if t == "a" and a.get("data-case")]
+    assert {a["data-case"] for a in links} == {"alpha", "beta"}
+    templates = [a for t, a in tags if t == "template"]
+    assert {a["data-case"] for a in templates} == {"alpha", "beta"}
+    assert any(t == "dialog" and a.get("id") == "case-dialog" for t, a in tags)
+    assert page.count("<script") == 1  # the CMS body's <script> is stripped
+
+
+def test_links_and_rel(page):
+    anchors = [a for t, a in parse(page) if t == "a"]
+    linkedin = [a for a in anchors if (a.get("href") or "").startswith("https://www.linkedin")]
+    assert linkedin and all("noopener" in (a.get("rel") or "") for a in linkedin)
+    assert not any("github.com" in (a.get("href") or "") for a in anchors)
+    contact = [a for a in anchors if a.get("href") == f"{ORIGIN}/contact"]
+    assert contact and "noopener" in (contact[0].get("rel") or "")
+
+
+def test_body_preserved_tables_wrapped_and_no_duplicate_ids(page):
+    assert page.count('<div class="table-scroll"><table>') == 2
+    ids = [a["id"] for _, a in parse(page) if a.get("id")]
+    assert len(ids) == len(set(ids))
+    assert "alert(1)" not in page
+    assert "<li>One</li>" in page
+
+
+def test_titles_escaped(page):
+    assert "Alpha &lt;b&gt;x&lt;/b&gt;" in page
+    assert "<b>x</b>" not in page
+
+
+def test_no_inline_style_attributes_or_insecure_urls(page):
+    assert not re.search(r"<[^>]+\sstyle=", page)
+    assert "http://" not in page
+    allowed = (ORIGIN, "https://www.linkedin.com", "https://github.com")
+    for url in re.findall(r"https://[^\s\"')<>]+", page):
+        assert url.startswith(allowed), url
+
+
+def test_override_replaces_fields_and_ignores_unknown(capsys):
+    overrides = {
+        "alpha": {
+            "title": "New title",
+            "summary": "New summary",
+            "body_html": "<h2>Fresh</h2><p>Fresh body</p>",
+            "stack": ["Access", "VBA"],
+            "result_headline": "Better",
+        },
+        "ghost": {"title": "Nope"},
+    }
+    html = bop.build_page(make_data(), origin=ORIGIN, overrides=overrides)
+    assert "New title" in html and "New summary" in html and "Fresh body" in html
+    assert "Alpha summary" not in html
+    assert "<li>VBA</li>" in html
+    assert "Nope" not in html
+    assert "ghost" in capsys.readouterr().err
+
+
+def test_build_page_is_pure(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    data = make_data()
+    before = json.dumps(data, sort_keys=True)
+    bop.build_page(data, origin=ORIGIN)
+    assert json.dumps(data, sort_keys=True) == before
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_real_pollywog_copy_override_applies():
+    overrides = bop.load_copy_overrides()
+    assert "pollywog-scheduling-automation" in overrides
+    data = make_data()
+    data["projects"][0]["slug"] = "pollywog-scheduling-automation"
+    html = bop.build_page(data, origin=ORIGIN, overrides=overrides)
+    assert "SCREENSHOT PLACEHOLDER" not in html
+    assert "The Problem" in html
+
+
+@pytest.mark.parametrize("content", [None, "{not json"])
+def test_cli_fails_cleanly(tmp_path, content, capsys):
+    source = tmp_path / "site.json"
+    if content is not None:
+        source.write_text(content)
+    out = tmp_path / "index.html"
+    code = bop.main(["--source", str(source), "--output", str(out), "--no-copy-overrides"])
+    assert code == 1
+    assert not out.exists()
+    assert capsys.readouterr().err.strip()
+
+
+def test_cli_writes_output(tmp_path):
+    source = tmp_path / "site.json"
+    source.write_text(json.dumps(make_data()))
+    out = tmp_path / "nested" / "index.html"
+    assert bop.main(
+        ["--source", str(source), "--origin", ORIGIN, "--output", str(out),
+         "--no-copy-overrides"]
+    ) == 0
+    assert out.read_text().startswith("<!doctype html>")
+
+
+def test_script_runs_as_program(tmp_path):
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--source", str(tmp_path / "missing.json"),
+         "--output", str(tmp_path / "o.html")],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 1
+    assert not (tmp_path / "o.html").exists()
