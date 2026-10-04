@@ -244,8 +244,11 @@ p { margin: 0; }
   min-width: 0;
 }
 
-.mini-timeline-copy h3 {
+.mini-timeline .mini-timeline-copy h2 {
   margin: 0 0 0.2rem;
+  font-size: 1.2rem;
+  line-height: 1.4;
+  letter-spacing: normal;
 }
 
 .mini-timeline-copy p:last-child {

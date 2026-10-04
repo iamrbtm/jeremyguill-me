@@ -129,3 +129,45 @@ def test_card_img_has_no_srcset_and_media_link_is_aria_hidden(client, db_session
     assert "srcset" not in work and "hero_mobile" not in work
     assert f"/media/public/{asset.id}/hero_desktop.webp" in work
     assert 'class="project-card2__media" href="/work/p" aria-hidden="true" tabindex="-1"' in work
+
+
+def _published_project(db_session, slug):
+    from portfolio.content.enums import PublicationState
+    from portfolio.content.models import Project
+
+    db_session.add(
+        Project(
+            title=slug.title(), slug=slug, summary="S.", rendered_html="<p>x</p>",
+            state=PublicationState.PUBLISHED, sort_position=1,
+        )
+    )
+    db_session.commit()
+
+
+def test_work_cards_use_h2_so_heading_order_is_valid(client, db_session):
+    _published_project(db_session, "alpha")
+
+    html = client.get("/work").get_data(as_text=True)
+
+    assert html.count("<h1") == 1 and "<h3" not in html
+    assert '<h2><a href="/work/alpha">Alpha</a></h2>' in html
+
+
+def test_home_cards_stay_h3(client, db_session):
+    _published_project(db_session, "alpha")
+
+    html = client.get("/").get_data(as_text=True)
+
+    assert '<h3><a href="/work/alpha">Alpha</a></h3>' in html
+
+
+def test_experience_roles_are_h2_with_one_h1(client, db_session):
+    from portfolio.content.models import Experience
+
+    db_session.add(Experience(organization="Org", role="Builder", start_date="2024",
+                              sort_position=1))
+    db_session.commit()
+
+    html = client.get("/experience").get_data(as_text=True)
+
+    assert html.count("<h1") == 1 and "<h2>Builder</h2>" in html and "<h3" not in html

@@ -9,7 +9,7 @@
         <header class="mini-timeline-header">
           <div class="mini-timeline-copy">
             <p class="time">{{ item.start_date or "Current" }}{% if item.end_date %} - {{ item.end_date }}{% endif %}</p>
-            <h3>{{ item.role }}</h3>
+            <h2>{{ item.role }}</h2>
             <p>{{ item.organization }}</p>
           </div>
           {% if item.logo_media_id %}

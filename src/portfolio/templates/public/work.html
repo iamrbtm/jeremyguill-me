@@ -8,6 +8,7 @@
 
   {% if cards %}
     <div class="work-index card-grid">
+      {% set card_heading = 'h2' %}
       {% for card in cards %}
         {% include "components/project_card.html" %}
       {% endfor %}

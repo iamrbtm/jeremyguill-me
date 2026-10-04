@@ -8,7 +8,8 @@
   </a>
   <div class="project-card2__body">
     {% if card.year %}<p class="project-card2__meta">{{ card.year }}</p>{% endif %}
-    <h3><a href="/work/{{ card.slug }}">{{ card.title }}</a></h3>
+    {% set heading = card_heading|default('h3') %}
+    <{{ heading }}><a href="/work/{{ card.slug }}">{{ card.title }}</a></{{ heading }}>
     <p>{{ card.summary }}</p>
     {% if card.result_headline %}<p class="project-card2__result"><strong>Result:</strong> {{ card.result_headline }}</p>{% endif %}
     {% if card.stack %}<ul class="tag-list" aria-label="Technologies">{% for tag in card.stack %}<li>{{ tag }}</li>{% endfor %}</ul>{% endif %}
