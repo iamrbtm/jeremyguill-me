@@ -1,0 +1,33 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Media{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">Content</p>
+    <h1>Edit Media</h1>
+    {% if error %}
+      <div class="alert" role="alert">{{ error }}</div>
+    {% endif %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>
+        Alt text
+        <input name="alt_text" value="{{ asset.alt_text }}" maxlength="240" required>
+      </label>
+      <label>
+        Caption
+        <textarea name="caption">{{ asset.caption }}</textarea>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save media</button>
+      </div>
+    </form>
+    <form method="post" action="{{ url_for('media.delete', asset_id=asset.id ) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-actions">
+        <button type="submit" class="btn btn-danger">Delete media</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

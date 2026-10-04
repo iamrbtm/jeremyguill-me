@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Preview {{ project.title }}{% endblock %}
+
+{% block content %}
+  <article class="admin-panel preview-page">
+    <p class="eyebrow">Signed Preview</p>
+    <h1>{{ project.title }}</h1>
+    <p>{{ project.summary }}</p>
+    <div>{{ project.rendered_html|safe }}</div>
+  </article>
+{% endblock %}

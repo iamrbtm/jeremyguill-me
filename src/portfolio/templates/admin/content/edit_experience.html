@@ -1,0 +1,82 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ "Edit " + entity.role + " at " + entity.organization if entity else "New Experience" }}{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">{{ content_type|title }}</p>
+    <h1>{% if is_new %}New Experience{% else %}Edit {{ entity.role }} at {{ entity.organization }}{% endif %}</h1>
+    {% if error %}
+      <div class="alert" role="alert">{{ error }}</div>
+      {% endif %}
+    {% if form.errors %}
+      <div class="alert" role="alert">
+        {% for messages in form.errors.values() %}
+          {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="admin-links">
+      {% if entity %}
+        <a href="{{ url_for('admin.experience') }}">Back to experience</a>
+      {% else %}
+        <a href="{{ url_for('admin.experience') }}">Cancel</a>
+      {% endif %}
+    </div>
+    <form method="post" enctype="multipart/form-data"
+          action="{{ url_for('admin.create_experience') if is_new else url_for('admin.update_experience', experience_id=entity.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="version" value="{{ form.version }}">
+      <div class="field-row">
+        <label>Role <input name="role" value="{{ form.role }}" required></label>
+        <label>Organization <input name="organization" value="{{ form.organization }}" required></label>
+      </div>
+      <div class="field-row">
+        <label>Start Date <input name="start_date" value="{{ form.start_date }}" placeholder="e.g. 2020 or Jan 2020"></label>
+        <label>End Date <input name="end_date" value="{{ form.end_date }}" placeholder="e.g. 2023 or Present"></label>
+      </div>
+      <div class="field-row">
+        <label>Order <input name="order" type="number" value="{{ form.order }}"></label>
+        <label class="checkbox-label"><input type="checkbox" name="visible" {% if form.visible %}checked{% endif %}> Visible on site</label>
+      </div>
+      <label>Summary <textarea name="summary" rows="2">{{ form.summary }}</textarea></label>
+
+      <fieldset class="admin-media">
+        <legend>Company Logo</legend>
+        {% if logo_asset %}
+          <p class="media-current">Current logo:
+            <img class="media-thumb" src="/media/public/{{ logo_asset.id }}/profile.webp" alt="{{ logo_asset.alt_text }}">
+          </p>
+          <label class="checkbox-label"><input type="checkbox" name="remove_logo" value="on"> Remove logo</label>
+        {% endif %}
+        <div class="field-row">
+          <label>Upload logo <input type="file" name="logo_image" accept="image/*"></label>
+          <label>Logo alt text <input name="logo_alt_text" value="{% if logo_asset %}{{ logo_asset.alt_text }}{% endif %}"></label>
+        </div>
+        <label>Or choose an existing image
+          <select name="logo_media_id">
+            <option value="">— None —</option>
+            {% for asset in media_assets %}
+              <option value="{{ asset.id }}" {% if logo_asset and logo_asset.id == asset.id %}selected{% endif %}>{{ asset.original_filename }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </fieldset>
+
+      <label>What I did (Markdown)</label>
+      {% with name="source_markdown", value=form.source_markdown %}
+        {% include "admin/components/editor.html" %}
+      {% endwith %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ "Create" if is_new else "Save" }}</button>
+        {% if entity %}
+          <button type="submit" formaction="{{ url_for('admin.delete_experience', experience_id=entity.id) }}" class="btn btn-danger" formnovalidate onclick="return confirm('Delete this experience entry?');">Delete</button>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script type="module" src="{{ url_for('static', filename='assets/editor.js') }}"></script>
+{% endblock %}

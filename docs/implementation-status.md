@@ -184,3 +184,358 @@
   - external links receive `rel="noopener noreferrer"`
 - Review result: self-review completed against Task 5 and the design specification. AI output and editor input will consume the same sanitizer in later tasks.
 - Commit SHA: `db5fbae`
+
+## Pre-Task 6 Dockerization Foundation
+
+- Deliverable: buildable Docker image, local Compose services for `web`, `worker`, `db`, and `backup`, non-root runtime container, static asset build stage, entrypoint static copy, private reference asset exclusion, and initial Compose safety tests.
+- Affected files:
+  - `.dockerignore`
+  - `Dockerfile`
+  - `compose.yaml`
+  - `docker/backup.Dockerfile`
+  - `docker/backup.sh`
+  - `docker/entrypoint.sh`
+  - `src/portfolio/worker.py`
+  - `tests/operations/test_compose_config.py`
+- Verification:
+  - `uv run pytest tests/operations/test_compose_config.py -v`: passed, 3 tests
+  - `uv run pytest -v`: passed, 28 tests
+  - `uv run ruff check .`: passed
+  - `docker compose config`: passed
+  - `docker build -t jeremyguill-portfolio:local .`: passed
+- Limitation: local Compose currently uses development environment defaults so it can validate and build without production secret files. Task 15 must replace this with production secret-file handling before deployment.
+- Review result: self-review completed. The database service exposes no host ports, the web service binds to `127.0.0.1:7777`, private `reference/` assets are excluded from Docker build context, and the runtime image runs as the non-root `portfolio` user.
+- Commit SHA: `06cc837`
+
+## Task 6: Mark-First Public Portfolio
+
+- Deliverable: Mark-first public homepage, project detail, experience, contact routes/templates, public view models, responsive CSS, stable Vite asset names, and idempotent initial content seed command using factual resume-supported content.
+- Affected files:
+  - `compose.yaml`
+  - `docker/entrypoint.sh`
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/config.py`
+  - `src/portfolio/content/seed.py`
+  - `src/portfolio/public/routes.py`
+  - `src/portfolio/public/view_models.py`
+  - `src/portfolio/static_src/css/site.css`
+  - `src/portfolio/templates/components/navigation.html`
+  - `src/portfolio/templates/components/project_card.html`
+  - `src/portfolio/templates/public/base.html`
+  - `src/portfolio/templates/public/contact.html`
+  - `src/portfolio/templates/public/experience.html`
+  - `src/portfolio/templates/public/home.html`
+  - `src/portfolio/templates/public/project.html`
+  - `tests/integration/public/test_public_pages.py`
+  - `tests/unit/public/test_view_models.py`
+  - `tests/unit/test_app_factory.py`
+  - `vite.config.ts`
+- Tests and verification:
+  - `uv run pytest tests/integration/public tests/unit/public -v`: passed, 8 tests
+  - `uv run pytest -v`: passed, 38 tests
+  - `uv run ruff check .`: passed
+  - `npm run build`: passed
+  - `docker compose config`: passed
+  - `docker compose build`: passed
+- Docker/local run note: local Compose now runs migrations and `flask content seed-initial` automatically for the web service so the homepage is usable after `docker compose up --build -d`.
+- Runtime fix: entrypoint uses `flask --app portfolio`, static copying is idempotent for existing volumes, and local Flask serves stable Vite assets from `/app/bundled_static`.
+- Review result: self-review completed against Task 6 and the design specification. Blog navigation hides unless a published blog post exists; draft projects return 404; public claims are sourced from `reference/Resume2026.md`.
+- Commit SHA: `4c0cf85`
+
+## Task 7: Portrait Processing and Media Library
+
+- Deliverable: hardened image upload validation, private original storage, generated public WebP variants, atomic staging/cleanup behavior, protected deletion for referenced media, and minimal passkey-protected admin media templates.
+- Affected files:
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/media/routes.py`
+  - `src/portfolio/media/services.py`
+  - `src/portfolio/media/validation.py`
+  - `src/portfolio/media/variants.py`
+  - `src/portfolio/templates/admin/media/edit.html`
+  - `src/portfolio/templates/admin/media/index.html`
+  - `tests/integration/media/test_media_lifecycle.py`
+  - `tests/unit/media/test_validation.py`
+- Tests and verification:
+  - `uv run pytest tests/unit/media tests/integration/media -v`: passed, 11 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 49 tests
+  - `npm run build`: passed
+- Security controls verified:
+  - active/executable upload filenames such as `.php`, `.svg`, and `.html` are rejected
+  - declared content type must match detected file signature
+  - uploads over 15 MB and oversized decoded dimensions are rejected
+  - originals are stored under private media paths and responsive variants are regenerated as public WebP files
+  - failed variant generation removes pending filesystem and database state
+  - media referenced by project hero fields cannot be deleted
+- Review result: self-review completed against Task 7 and the design specification. The approved portrait treatment step still requires an approved image-editing tool/source workflow before production media is finalized.
+- Commit SHA: `e717491`
+
+## Task 8: Admin Dashboard and Structured Content Management
+
+- Deliverable: passkey-protected admin dashboard, ordered project listing, explicit project edit form, revision-aware draft saves, optimistic concurrency conflict response, archive/restore/sort actions, signed 30-minute previews tied to the active admin session, and admin CSS/JS bundle entrypoint.
+- Affected files:
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/admin/forms.py`
+  - `src/portfolio/admin/routes.py`
+  - `src/portfolio/admin/view_models.py`
+  - `src/portfolio/auth/routes.py`
+  - `src/portfolio/static_src/css/admin.css`
+  - `src/portfolio/static_src/ts/admin.ts`
+  - `src/portfolio/templates/admin/base.html`
+  - `src/portfolio/templates/admin/content/edit.html`
+  - `src/portfolio/templates/admin/content/list.html`
+  - `src/portfolio/templates/admin/content/preview.html`
+  - `src/portfolio/templates/admin/dashboard.html`
+  - `src/portfolio/templates/admin/media/edit.html`
+  - `tests/integration/admin/test_content_crud.py`
+  - `tests/integration/admin/test_preview.py`
+  - `vite.config.ts`
+- Tests and verification:
+  - `uv run pytest tests/integration/admin -v`: passed, 11 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 60 tests
+  - `npm run build`: passed
+- Security controls verified:
+  - `/admin` redirects unauthenticated users to `/admin/sign-in`
+  - project edit POSTs accept only explicit form fields and reject validation errors with 422
+  - stale project edits return 409 instead of overwriting newer content
+  - signed previews include entity type, entity ID, version, admin session ID, and expiry
+  - preview responses set `X-Robots-Tag: noindex, nofollow`
+  - previews reject expired, mismatched-session, and stale-version tokens
+  - admin forms include CSRF token fields for production CSRF enforcement
+- Review result: self-review completed against Task 8 and the design specification. Blog, experience, profile, and settings endpoints are present as protected list/placeholder pages; richer editing for those domains remains for later CMS tasks.
+- Commit SHA: `6cb21d7`
+
+## Task 9: Rich-Text and Markdown Editing
+
+- Deliverable: server-side editor source contract, draft/publish contract enforcement, Toast UI editor adapter with a narrow `PortfolioEditor` API, admin editor component, edit-page editor asset loading, and editor wiring tests.
+- Affected files:
+  - `src/portfolio/admin/routes.py`
+  - `src/portfolio/content/editor_contract.py`
+  - `src/portfolio/content/services.py`
+  - `src/portfolio/static_src/ts/editor.ts`
+  - `src/portfolio/templates/admin/base.html`
+  - `src/portfolio/templates/admin/components/editor.html`
+  - `src/portfolio/templates/admin/content/edit.html`
+  - `tests/unit/content/test_editor_contract.py`
+  - `tests_e2e/test_editor_roundtrip.py`
+  - `vite.config.ts`
+- Tests and verification:
+  - `uv run pytest tests/unit/content/test_editor_contract.py -v`: passed, 6 tests
+  - `npm run build`: passed with a non-failing Toast UI editor chunk-size warning
+  - `uv run pytest tests_e2e/test_editor_roundtrip.py -v`: passed, 2 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 66 tests
+- Security controls verified:
+  - raw HTML source is rejected instead of silently accepted into drafts
+  - editor source over 500 KB is rejected
+  - Markdown images must use approved `/media/` paths or the production media origin
+  - draft saves and publish validation both enforce the editor contract before rendering
+  - the browser adapter syncs editor Markdown back to the submitted source field on form submit
+- Review result: self-review completed against Task 9 and the design specification. The editor E2E tests currently verify adapter/template wiring without launching a real browser; full Playwright round-trip coverage remains useful once browser fixtures are introduced.
+- Commit SHA: `93980cf`
+
+## Task 10: NVIDIA Integration and Controlled AI Revision
+
+- Deliverable: encrypted integration secret handling, NVIDIA model validation/classification, redacted NVIDIA revision client, persisted AI revision suggestions, source-hash guarded acceptance, rejection endpoint, AI settings template, AI revision component event scaffold, and Alembic migration for suggestions.
+- Affected files:
+  - `migrations/versions/0003_ai_revision_suggestions.py`
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/config.py`
+  - `src/portfolio/integrations/crypto.py`
+  - `src/portfolio/integrations/models.py`
+  - `src/portfolio/integrations/nvidia.py`
+  - `src/portfolio/integrations/routes.py`
+  - `src/portfolio/integrations/services.py`
+  - `src/portfolio/static_src/ts/ai_revision.ts`
+  - `src/portfolio/templates/admin/components/ai_revision.html`
+  - `src/portfolio/templates/admin/settings/ai.html`
+  - `tests/integration/integrations/test_ai_revision.py`
+  - `tests/integration/test_initial_migration.py`
+  - `tests/unit/integrations/test_crypto.py`
+  - `tests/unit/integrations/test_nvidia.py`
+  - `vite.config.ts`
+- Tests and verification:
+  - `uv run pytest tests/unit/integrations tests/integration/integrations -v`: passed, 11 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 77 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+  - `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task10-migration.sqlite" uv run flask --app portfolio db upgrade`: passed
+  - `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task10-migration.sqlite" uv run flask --app portfolio db downgrade base`: passed
+  - second `DATABASE_URL="sqlite+pysqlite:////tmp/opencode/task10-migration.sqlite" uv run flask --app portfolio db upgrade`: passed
+- Security controls verified:
+  - encrypted API key ciphertext does not contain plaintext and decrypts only through configured key material
+  - production requires `SETTINGS_ENCRYPTION_KEY`
+  - NVIDIA model discovery returns all models while disabling non-text models with an explanation
+  - NVIDIA API errors are redacted and do not include the submitted API key
+  - timeouts return 504 and leave source Markdown unchanged
+  - revision suggestions are stored side-by-side and never overwrite source without explicit acceptance
+  - acceptance returns 409 when the current source hash differs from the suggestion source hash
+- Review result: self-review completed against Task 10 and the design specification. Tests use mocked NVIDIA endpoints only; no real external NVIDIA calls were made.
+- Commit SHA: `84e20df`
+
+## Task 11: Deterministic SEO, AI Suggestions, and Redirects
+
+- Deliverable: deterministic metadata and JSON-LD builders, public metadata include, canonical public page metadata, sitemap and robots routes/templates, and permanent redirect resolution with redirect-chain collapse.
+- Affected files:
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/public/routes.py`
+  - `src/portfolio/seo/routes.py`
+  - `src/portfolio/seo/schemas.py`
+  - `src/portfolio/seo/services.py`
+  - `src/portfolio/templates/components/metadata.html`
+  - `src/portfolio/templates/public/base.html`
+  - `src/portfolio/templates/robots.txt`
+  - `src/portfolio/templates/sitemap.xml`
+  - `tests/integration/seo/test_sitemap_and_redirects.py`
+  - `tests/unit/seo/test_metadata.py`
+- Tests and verification:
+  - `uv run pytest tests/unit/seo tests/integration/seo -v`: passed, 9 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 86 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Security/SEO controls verified:
+  - canonical URLs are built from `PUBLIC_ORIGIN`
+  - unpublished metadata resolves to `noindex,nofollow`
+  - project detail pages render canonical metadata and JSON-LD
+  - sitemap includes only published canonical project URLs plus stable public pages
+  - old project slug redirects return 308 and redirect chains collapse to one hop
+  - robots.txt advertises the deterministic sitemap URL
+- Review result: self-review completed against Task 11 and the design specification. SEO output is deterministic and does not depend on AI availability.
+- Commit SHA: `b1307bb`
+
+## Task 12: Blog, Resume, and Contact Workflow
+
+- Deliverable: published blog index/detail routes, draft-private blog behavior, resume redirect, contact form validation, honeypot/timing spam discard, persistence-before-notification contact handling, configurable SMTP notification service, admin contact list/detail/state updates, and email settings placeholder.
+- Affected files:
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/contact/forms.py`
+  - `src/portfolio/contact/mailer.py`
+  - `src/portfolio/contact/routes.py`
+  - `src/portfolio/contact/services.py`
+  - `src/portfolio/public/blog_routes.py`
+  - `src/portfolio/templates/admin/contact/detail.html`
+  - `src/portfolio/templates/admin/contact/index.html`
+  - `src/portfolio/templates/admin/settings/email.html`
+  - `src/portfolio/templates/public/blog_index.html`
+  - `src/portfolio/templates/public/blog_post.html`
+  - `src/portfolio/templates/public/contact.html`
+  - `tests/integration/contact/test_contact_flow.py`
+  - `tests/integration/public/test_blog.py`
+  - `tests/security/test_contact_abuse.py`
+- Tests and verification:
+  - `uv run pytest tests/integration/public/test_blog.py tests/integration/contact tests/security/test_contact_abuse.py -v`: passed, 11 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 97 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Security/privacy controls verified:
+  - draft blog posts remain private
+  - invalid contact payloads return 422 without persistence
+  - honeypot and too-fast submissions redirect like normal submissions but are not stored
+  - valid submissions are committed before delivery is attempted
+  - email failures leave the submission stored with failed delivery status and a safe error code
+  - admin contact state transitions require a passkey session
+- Review result: self-review completed against Task 12 and the design specification. SMTP settings are configuration-backed and no real email was sent during tests.
+- Commit SHA: `f5dabe2`
+
+## Task 13: Background Worker and Scheduled Publication
+
+- Deliverable: database-backed unique job enqueue, due-job claiming with leases, bounded retry/backoff and failed state, publish/email/media handlers, and `run_once` worker processing with graceful no-job behavior.
+- Affected files:
+  - `src/portfolio/content/services.py`
+  - `src/portfolio/jobs/handlers.py`
+  - `src/portfolio/jobs/services.py`
+  - `src/portfolio/worker.py`
+  - `tests/integration/jobs/test_worker.py`
+  - `tests/unit/jobs/test_job_service.py`
+- Tests and verification:
+  - `uv run pytest tests/unit/jobs tests/integration/jobs -v`: passed, 9 tests
+  - `uv run ruff check .`: passed
+  - `uv run pytest -v`: passed, 107 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Reliability controls verified:
+  - active pending/running jobs are not duplicated
+  - completed jobs allow a new future job for the same target
+  - claimed jobs are not claimed by a second worker while leased
+  - expired leases can be reclaimed
+  - failed jobs retry with bounded backoff and move to `failed` after five attempts
+  - scheduled projects publish idempotently through the worker
+  - contact notification jobs are delegated to the mailer path
+  - `python -m portfolio.worker` creates an application context before database work
+- Review result: self-review completed against Task 13 and the design specification. SQLite exercises the lease state transitions; PostgreSQL `SKIP LOCKED` remains covered by the SQLAlchemy claim query shape and should be verified against PostgreSQL before production.
+- Commit SHA: `d2c6537`
+
+## Task 14: Security Headers, Request Hardening, and Regression Suite
+
+- Deliverable: global restrictive security headers, no-store auth responses, safe local redirect validation, structured secret redaction filter, contact form CSP cleanup, expanded security regression suite, clean dependency audit, and mypy static-check configuration for the current dynamic Flask/SQLAlchemy boundary.
+- Affected files:
+  - `pyproject.toml`
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/public/routes.py`
+  - `src/portfolio/security/headers.py`
+  - `src/portfolio/security/logging.py`
+  - `src/portfolio/security/validation.py`
+  - `src/portfolio/templates/public/contact.html`
+  - `tests/security/test_csrf.py`
+  - `tests/security/test_headers.py`
+  - `tests/security/test_injection.py`
+  - `tests/security/test_paths_and_redirects.py`
+  - `tests/security/test_secret_redaction.py`
+  - `tests/security/test_xss.py`
+  - `uv.lock`
+- Tests and verification:
+  - `uv run pytest tests/security -v`: passed, 15 tests
+  - `uv run pip-audit`: passed, no known vulnerabilities found for audited dependencies
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed, 59 source files
+  - `uv run pytest -v`: passed, 117 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Dependency updates:
+  - `cryptography` locked to `48.0.1`
+  - `Pillow` locked to `12.3.0`
+  - `pyOpenSSL` locked to `26.2.0`
+  - `pytest` locked to `9.1.1`
+- Security controls verified:
+  - Content Security Policy, `nosniff`, referrer policy, and permissions policy are present
+  - auth pages return `Cache-Control: no-store`
+  - SQL injection payloads are treated as data and leave schema intact
+  - stored external redirects are rejected instead of followed
+  - project summary output is escaped
+  - CSRF protection rejects public POSTs when enabled
+  - authorization/API key/token text is redacted from structured logs
+- Review result: self-review completed against Task 14 and the design specification. Production HSTS remains an Nginx/HTTPS deployment concern for Task 15.
+- Commit SHA: `e5be8ed`
+
+## Task 15: Docker Compose, Backup, Nginx, and Operations
+
+- Deliverable: readiness endpoint, Compose resource/logging hardening, encrypted backup and explicit restore guardrails, backup image `age` support, host Nginx config for static/media/proxy/TLS, deployment docs, and backup/restore docs.
+- Affected files:
+  - `compose.yaml`
+  - `docker/backup.Dockerfile`
+  - `docker/backup.sh`
+  - `docker/nginx/jeremyguill.me.conf`
+  - `docs/backup-and-restore.md`
+  - `docs/deployment.md`
+  - `src/portfolio/__init__.py`
+  - `src/portfolio/operations/routes.py`
+  - `src/portfolio/operations/services.py`
+  - `tests/integration/operations/test_readiness.py`
+  - `tests/operations/test_compose_config.py`
+- Tests and verification:
+  - `docker compose config`: passed
+  - `docker build -t jeremyguill-portfolio:test .`: passed
+  - `uv run pytest tests/integration/operations tests/operations -v`: passed, 9 tests
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed, 61 source files
+  - `uv run pip-audit`: passed, no known vulnerabilities found for audited dependencies
+  - `uv run pytest -v`: passed, 123 tests
+  - `npm run build`: passed with the known non-failing Toast UI editor chunk-size warning
+- Operations controls verified:
+  - `/health/ready` reports database success/failure without exception text
+  - database service exposes no host port
+  - web binds to `127.0.0.1:7777`
+  - services use read-only filesystems, tmpfs, restart policies, memory limits, and log rotation
+  - backup script uses `pg_dump --format=custom`, archives media, encrypts with `age` when a recipient is present, and refuses restore without explicit confirmation
+  - Nginx config caps uploads at 15 MB, serves `/static/` and `/media/`, denies dotfiles, forwards proxy headers, and applies HSTS only on HTTPS
+- Review result: self-review completed against Task 15 and the design specification. Local Compose still uses development password defaults for repeatable local validation; deployment docs call out production secret/environment requirements.
+- Commit SHA: `7c1c562`

@@ -1,0 +1,106 @@
+{% extends "public/base.html" %}
+{% block title %}Jeremy Guill | Software and Workflow Portfolio{% endblock %}
+{% block content %}
+<section id="header" class="header mark-hero">
+  <div class="container">
+    <div class="mark-hero__copy reveal">
+      {% if site.profile.availability_text %}<p class="availability-pill">{{ site.profile.availability_text }}</p>{% endif %}
+      <h1>{{ view.profile.headline }}</h1>
+      <p>{{ view.profile.summary or "A portfolio of practical software, database, automation, and support work built around real problems and measurable workflow improvements." }}</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#work" data-umami-event="cta-view-work">View my work</a>
+        <a class="button button-outline" href="/contact" data-umami-event="cta-connect-hero">Connect with me</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about" class="services-section">
+  <div class="container narrow-heading reveal">
+    <h2>Hi, I'm Jeremy.</h2>
+    <p>I build the software, databases, and automation that make day-to-day operations easier to run, then train and support the people who use them. This site is a working record of that work.</p>
+  </div>
+  <div class="container service-grid">
+    {% for capability in view.capabilities %}
+      <article class="service-card reveal">
+        <span class="service-icon" aria-hidden="true">{{ loop.index }}</span>
+        <h3>{{ capability.title }}</h3>
+        <p>{{ capability.body }}</p>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="split-detail">
+  {% if site.has_portrait %}
+    <img class="split-detail__image" src="{{ static_url('assets/img/jeremyguill_profile.webp') }}"
+         srcset="{{ static_url('assets/img/jeremyguill_profile-600.webp') }} 600w, {{ static_url('assets/img/jeremyguill_profile.webp') }} 1200w"
+         sizes="(max-width: 62rem) 100vw, 50vw" width="1200" height="797" alt="Jeremy Guill" loading="lazy">
+  {% endif %}
+  <div class="split-detail__copy bg-gray reveal">
+    <div>
+      <h2>How I approach technical work</h2>
+      <p>I take time to understand what is actually happening before proposing software, so the tools I build fit the environment, earn trust, and stay maintainable after launch.</p>
+      <h3>Process first</h3>
+      <p>Map the current workflow, clarify the pain points, and build around the reality of the job instead of forcing people into generic tools.</p>
+      <h3>Reliable implementation</h3>
+      <p>Requirements, database structure, testing, rollout support, user training, troubleshooting, and iteration stay connected from start to finish.</p>
+    </div>
+  </div>
+</section>
+
+<section id="work" class="projects-section">
+  <div class="container narrow-heading reveal">
+    <h2>Selected work</h2>
+    <p>Representative projects across scheduling automation, lending-library systems, FileMaker workflows, and database-backed operations.</p>
+  </div>
+  <div class="container card-grid">
+    {% for card in view.home_project_cards %}
+      {% include "components/project_card.html" %}
+    {% else %}
+      <p>Selected projects will appear here after they are published.</p>
+    {% endfor %}
+  </div>
+  {% if view.has_more_projects %}
+    <div class="container work-cta">
+      <a class="button button-primary" href="/work">View all work</a>
+    </div>
+  {% endif %}
+</section>
+
+<section class="principle-section">
+  <div class="container reveal">
+    <h2>Built for people who need software to make work clearer.</h2>
+    <p class="principle">The strongest work starts with understanding the people, the process, and the constraints before writing the solution.</p>
+  </div>
+</section>
+
+{% if view.show_blog_section %}
+<section id="writing" class="blog-section">
+  <div class="container narrow-heading reveal">
+    <h2>Latest writing</h2>
+    <p>Notes on practical software, workflow systems, and the craft of building tools that fit real work.</p>
+  </div>
+  <div class="container blog-grid">
+    {% for post in view.blog_posts %}
+      <article class="blog-card reveal">
+        <h3><a href="/blog/{{ post.slug }}">{{ post.title }}</a></h3>
+        <p>{{ post.summary }}</p>
+        <a class="blue-link" href="/blog/{{ post.slug }}">Read the post</a>
+      </article>
+    {% endfor %}
+  </div>
+  <div class="container work-cta">
+    <a class="button button-primary" href="/blog">View all posts</a>
+  </div>
+</section>
+{% endif %}
+
+<section class="contact-cta bg-gray">
+  <div class="container reveal">
+    <h2>Hiring, or have a workflow that needs fixing?</h2>
+    <p>Whether you are filling a role or looking for someone to build or improve a system, I'm glad to talk through the work shown here and the problems behind it.</p>
+    <a class="button button-primary" href="/contact" data-umami-event="cta-connect-footer">Connect with me</a>
+  </div>
+</section>
+{% endblock %}

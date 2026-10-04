@@ -1,0 +1,50 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Media Library{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">Content</p>
+    <h1>Media Library</h1>
+    {% if error %}
+      <div class="alert" role="alert">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="{{ url_for('media.upload') }}" enctype="multipart/form-data" class="admin-media">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field-row">
+        <label>Image <input type="file" name="file" accept="image/*" required></label>
+        <label>Alt text <input name="alt_text" value=""></label>
+      </div>
+      <label>Caption <textarea name="caption"></textarea></label>
+      <label class="checkbox-row">
+        <input type="checkbox" name="private" checked> Private (not indexed)
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Upload</button>
+      </div>
+    </form>
+
+    {% if assets %}
+      <table>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Type</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for asset in assets %}
+            <tr>
+              <td><a href="{{ url_for('media.edit', asset_id=asset.id) }}">{{ asset.original_filename }}</a></td>
+              <td>{{ asset.mime_type }}</td>
+              <td><a class="blue-link" href="{{ url_for('media.edit', asset_id=asset.id) }}">Edit</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No media assets have been uploaded yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -11,12 +11,20 @@ from .config import Settings
 
 def create_app(config: Mapping[str, object] | None = None) -> Flask:
     settings = Settings.from_env()
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder=settings.static_folder)
     app.config.from_mapping(
         SECRET_KEY=settings.secret_key,
         SQLALCHEMY_DATABASE_URI=settings.database_url,
         PUBLIC_ORIGIN=settings.public_origin,
+        APP_ENV=settings.app_env,
         WEBAUTHN_RP_ID=settings.rp_id,
+        RATELIMIT_STORAGE_URI=settings.rate_limit_storage_uri,
+        SETTINGS_ENCRYPTION_KEY=settings.settings_encryption_key,
+        OPENAI_MODEL=settings.openai_model,
+        ADMIN_USERNAME=settings.admin_username,
+        ADMIN_PASSWORD_HASH=settings.admin_password_hash,
+        ANALYTICS_SCRIPT_URL=settings.analytics_script_url,
+        ANALYTICS_WEBSITE_ID=settings.analytics_website_id,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Strict",
         SESSION_COOKIE_SECURE=settings.app_env == "production",
@@ -32,17 +40,45 @@ def create_app(config: Mapping[str, object] | None = None) -> Flask:
     limiter.init_app(app)
     migrate.init_app(app, db)
 
+    from .security.headers import apply_security_headers
+
+    app.after_request(apply_security_headers)
+
+    from .assets import init_assets
+
+    init_assets(app)
+
+    from .public.chrome import SiteChrome
+
+    app.context_processor(lambda: {"site": SiteChrome()})
+
     import_models()
 
+    from .admin.routes import admin_bp
     from .auth.routes import auth_bp
+    from .contact.routes import contact_bp
+    from .integrations.routes import integrations_bp
+    from .media.routes import media_bp
+    from .operations.routes import operations_bp
+    from .public.blog_routes import blog_bp
     from .public.routes import public_bp
+    from .seo.routes import seo_bp
 
     app.register_blueprint(public_bp)
+    app.register_blueprint(blog_bp)
+    app.register_blueprint(contact_bp)
+    app.register_blueprint(operations_bp)
+    app.register_blueprint(admin_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(integrations_bp)
+    app.register_blueprint(media_bp)
+    app.register_blueprint(seo_bp)
 
     from .auth.cli import admin_cli
+    from .content.seed import content_cli
 
     app.cli.add_command(admin_cli)
+    app.cli.add_command(content_cli)
 
     register_error_handlers(app)
 
@@ -70,5 +106,6 @@ def import_models() -> None:
         "portfolio.integrations.models",
         "portfolio.jobs.models",
         "portfolio.media.models",
+        "portfolio.seo.models",
     ):
         import_module(module_name)

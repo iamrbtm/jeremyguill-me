@@ -1,0 +1,10 @@
+{% extends "public/base.html" %}
+{% block title %}{{ post.title }} | Jeremy Guill{% endblock %}
+{% block content %}
+<article class="project-detail">
+  <p class="eyebrow">Blog</p>
+  <h1>{{ post.title }}</h1>
+  <p class="lede">{{ post.summary }}</p>
+  <div class="prose">{{ post.rendered_html|safe }}</div>
+</article>
+{% endblock %}

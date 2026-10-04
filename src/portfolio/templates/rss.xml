@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Jeremy Guill: Notes on practical software work</title>
+    <link>{{ site_url }}</link>
+    <description>Notes on practical software, workflow systems, and building tools that fit real work.</description>
+    <language>en-us</language>
+    <atom:link href="{{ feed_url }}" rel="self" type="application/rss+xml"/>
+    {% for item in items %}
+    <item>
+      <title>{{ item.title }}</title>
+      <link>{{ item.link }}</link>
+      <guid isPermaLink="true">{{ item.link }}</guid>
+      <description>{{ item.summary }}</description>
+      <pubDate>{{ item.date }}</pubDate>
+    </item>
+    {% endfor %}
+  </channel>
+</rss>

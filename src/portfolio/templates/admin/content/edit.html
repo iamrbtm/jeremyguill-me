@@ -1,0 +1,103 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit {{ entity.title if entity else "New project" }}{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">{{ content_type|title }}</p>
+    <h1>{% if is_new %}New project{% else %}Edit {{ entity.title }}{% endif %}</h1>
+    {% if entity %}
+      <p class="state-badge">State: {{ entity.state.value }}</p>
+    {% endif %}
+    {% if error %}
+      <div class="alert" role="alert">{{ error }}</div>
+    {% endif %}
+    {% if conflict %}
+      <div class="alert" role="alert">Content changed while you were editing. Review the latest record before saving again.</div>
+    {% endif %}
+    {% if form.errors %}
+      <div class="alert" role="alert">
+        {% for messages in form.errors.values() %}
+          {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="admin-links">
+      {% if entity %}
+        <a href="{{ url_for('admin.project_preview_url', project_id=entity.id) }}">Open signed preview</a>
+        <a href="{{ url_for('admin.projects') }}">Back to projects</a>
+      {% endif %}
+    </div>
+    <form method="post" enctype="multipart/form-data"
+          action="{{ url_for('admin.create_project') if is_new else url_for('admin.update_project', project_id=entity.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="version" value="{{ form.version }}">
+      <div class="field-row">
+        <label>Title <input name="title" value="{{ form.title }}" required></label>
+        <label>Slug <input name="slug" value="{{ form.slug }}" required></label>
+        <label>Order <input name="order" type="number" value="{{ form.order }}"></label>
+      </div>
+      <label>Summary <textarea name="summary" maxlength="320">{{ form.summary }}</textarea></label>
+      <fieldset>
+        <legend>At a glance (shown on the public case study and project cards)</legend>
+        <div class="field-row">
+          <label>Role <input name="role" value="{{ form.role }}" maxlength="120"></label>
+          <label>Year <input name="year" value="{{ form.year }}" maxlength="20"></label>
+        </div>
+        <label>Stack (comma separated) <input name="stack" value="{{ form.stack }}" maxlength="240"></label>
+        <label>Main result (one line) <input name="result_headline" value="{{ form.result_headline }}" maxlength="240"></label>
+      </fieldset>
+
+      <fieldset class="admin-media">
+        <legend>Images</legend>
+        {% if hero_asset %}
+          <p class="media-current">Current hero:
+            <img class="media-thumb" src="/media/public/{{ hero_asset.id }}/profile.webp" alt="{{ hero_asset.alt_text }}">
+          </p>
+        {% endif %}
+        <div class="field-row">
+          <label>Hero image <input type="file" name="hero_image" accept="image/*"></label>
+          <label>Hero alt text <input name="hero_alt_text" value=""></label>
+        </div>
+        <label>Or choose an existing image
+          <select name="hero_media_id">
+            <option value="">— None —</option>
+            {% for asset in media_assets %}
+              <option value="{{ asset.id }}" {% if hero_asset and hero_asset.id == asset.id %}selected{% endif %}>{{ asset.original_filename }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Gallery images (optional, multiple) <input type="file" name="gallery_images" accept="image/*" multiple></label>
+        <label>Gallery alt text <input name="gallery_alt_text" value=""></label>
+        {% if gallery %}
+          <p class="media-current">Existing gallery images:</p>
+          <ul class="media-grid">
+            {% for asset in gallery %}
+              <li>
+                <img class="media-thumb" src="/media/public/{{ asset.id }}/profile.webp" alt="{{ asset.alt_text }}">
+                <label class="media-remove"><input type="checkbox" name="remove_gallery" value="{{ asset.id }}"> Remove</label>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </fieldset>
+
+      <label>Markdown or HTML</label>
+      {% with name="source_markdown", value=form.source_markdown %}
+        {% include "admin/components/editor.html" %}
+      {% endwith %}
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save draft</button>
+        {% if entity %}
+          <button type="submit" formaction="{{ url_for('admin.publish_project', project_id=entity.id) }}" class="btn btn-primary" formnovalidate>Publish</button>
+          <button type="submit" formaction="{{ url_for('admin.archive_project', project_id=entity.id) }}" class="btn btn-danger" formnovalidate>Archive</button>
+          <button type="submit" formaction="{{ url_for('admin.restore_project', project_id=entity.id) }}" class="btn btn-secondary" formnovalidate>Restore to draft</button>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script type="module" src="{{ url_for('static', filename='assets/editor.js') }}"></script>
+{% endblock %}

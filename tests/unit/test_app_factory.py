@@ -11,6 +11,17 @@ def test_create_app_uses_testing_overrides():
     assert app.testing is True
 
 
+def test_rate_limit_storage_is_explicit():
+    app = create_app({"TESTING": True, "SECRET_KEY": "test-only"})
+    assert app.config["RATELIMIT_STORAGE_URI"] == "memory://"
+
+
+def test_static_folder_can_be_configured(monkeypatch):
+    monkeypatch.setenv("STATIC_FOLDER", "/tmp/static-assets")
+    app = create_app({"TESTING": True, "SECRET_KEY": "test-only"})
+    assert app.static_folder == "/tmp/static-assets"
+
+
 def test_liveness_endpoint(client):
     response = client.get("/health/live")
     assert response.status_code == 200

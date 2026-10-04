@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, UniqueConstraint, Uuid
+from sqlalchemy import DateTime, Index, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from portfolio.content.models import TimestampMixin
@@ -13,7 +13,15 @@ from portfolio.extensions import db
 class Job(TimestampMixin, db.Model):
     __tablename__ = "jobs"
     __table_args__ = (
-        UniqueConstraint("kind", "entity_type", "entity_id", "state"),
+        Index(
+            "uq_jobs_active_kind_entity",
+            "kind",
+            "entity_type",
+            "entity_id",
+            unique=True,
+            sqlite_where=db.text("state IN ('pending', 'running')"),
+            postgresql_where=db.text("state IN ('pending', 'running')"),
+        ),
         {"sqlite_autoincrement": False},
     )
 

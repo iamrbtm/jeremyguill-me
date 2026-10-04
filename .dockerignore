@@ -1,0 +1,16 @@
+.git
+.venv
+node_modules
+.pytest_cache
+.mypy_cache
+.ruff_cache
+htmlcov
+.coverage
+.env
+secrets
+reference
+var
+*.pyc
+__pycache__
+.DS_Store
+._*

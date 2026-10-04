@@ -6,11 +6,11 @@ from portfolio.audit.services import record_event, redact_metadata
 
 def test_record_event_redacts_secret_values(db_session):
     event = record_event(
-        action="nvidia.key.validated",
+        action="openai.key.validated",
         actor="admin",
         target_type="integration",
-        target_id="nvidia",
-        metadata={"api_key": "nvapi-secret", "model": "writer"},
+        target_id="openai",
+        metadata={"api_key": "openai-secret", "model": "writer"},
     )
     db_session.commit()
 

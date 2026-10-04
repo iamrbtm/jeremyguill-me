@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+
+{% block title %}AI Settings{% endblock %}
+
+{% block content %}
+  <section class="admin-panel">
+    <p class="eyebrow">Integrations</p>
+    <h1>OpenAI editorial assistance</h1>
+    <p>Validate and save an OpenAI API key. Stored keys are encrypted and never rendered back.</p>
+    {% if message %}<p class="notice success">{{ message }}</p>{% endif %}
+    {% if error %}<p class="notice error">{{ error }}</p>{% endif %}
+    <form method="post" action="{{ url_for('integrations.save_ai_key') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>API key <input type="password" name="api_key" autocomplete="off"></label>
+      <button type="submit">Validate key and refresh models</button>
+    </form>
+  </section>
+
+  <section class="admin-panel">
+    <p class="eyebrow">Model selection</p>
+    <h2>Default OpenAI model</h2>
+    <p>Start typing to search validated chat/text models. You can still paste a model ID manually.</p>
+    <form method="post" action="{{ url_for('integrations.save_ai_model') }}" class="settings-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>OpenAI model
+        <input type="text" name="openai_model" value="{{ current_model }}" list="openai-models" autocomplete="off" required>
+      </label>
+      <datalist id="openai-models">
+        {% for model in openai_models %}
+          {% if model.enabled %}
+            <option value="{{ model.id }}"></option>
+          {% endif %}
+        {% endfor %}
+      </datalist>
+      <button type="submit">Save default model</button>
+    </form>
+    {% if not openai_models %}
+      <p>No saved model list yet. Validate the OpenAI API key above to populate the dropdown.</p>
+    {% endif %}
+  </section>
+{% endblock %}

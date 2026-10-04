@@ -1,12 +1,13 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Server Error | Jeremy Guill</title>
-  </head>
-  <body>
-    <h1>Server error</h1>
-    <p>Something went wrong. Please try again later.</p>
-  </body>
-</html>
+{% extends "public/base.html" %}
+{% block title %}Something went wrong | Jeremy Guill{% endblock %}
+{% block content %}
+<section class="page-section">
+  <p class="eyebrow">500</p>
+  <h1>Something broke on my end.</h1>
+  <p class="lede">Please try again in a moment.</p>
+  <p class="hero-actions">
+    <a class="button button-primary" href="/work">See my work</a>
+    <a class="button button-outline" href="/">Back to home</a>
+  </p>
+</section>
+{% endblock %}

@@ -37,6 +37,13 @@ class SiteProfile(EditableMixin, db.Model):
     summary: Mapped[str] = mapped_column(Text, default="")
     email: Mapped[str | None] = mapped_column(String(255))
     location: Mapped[str | None] = mapped_column(String(160))
+    seo_title: Mapped[str | None] = mapped_column(String(180))
+    seo_description: Mapped[str | None] = mapped_column(String(320))
+    seo_target_query: Mapped[str | None] = mapped_column(String(180))
+    seo_last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    linkedin_url: Mapped[str | None] = mapped_column(String(300))
+    github_url: Mapped[str | None] = mapped_column(String(300))
+    availability_text: Mapped[str | None] = mapped_column(String(240))
 
 
 class Project(EditableMixin, db.Model):
@@ -58,6 +65,32 @@ class Project(EditableMixin, db.Model):
     hero_media_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("media_assets.id")
     )
+    seo_title: Mapped[str | None] = mapped_column(String(180))
+    seo_description: Mapped[str | None] = mapped_column(String(320))
+    seo_target_query: Mapped[str | None] = mapped_column(String(180))
+    seo_last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    role: Mapped[str | None] = mapped_column(String(120))
+    stack: Mapped[str | None] = mapped_column(String(240))
+    year: Mapped[str | None] = mapped_column(String(20))
+    result_headline: Mapped[str | None] = mapped_column(String(240))
+
+    @property
+    def stack_list(self) -> list[str]:
+        return [part.strip() for part in (self.stack or "").split(",") if part.strip()]
+
+
+class ProjectGalleryItem(db.Model):
+    __tablename__ = "project_gallery_items"
+
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    media_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("media_assets.id", ondelete="CASCADE"), primary_key=True
+    )
+    position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    media = relationship("MediaAsset")
 
 
 class BlogPost(EditableMixin, db.Model):
@@ -74,6 +107,10 @@ class BlogPost(EditableMixin, db.Model):
     )
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     publish_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    seo_title: Mapped[str | None] = mapped_column(String(180))
+    seo_description: Mapped[str | None] = mapped_column(String(320))
+    seo_target_query: Mapped[str | None] = mapped_column(String(180))
+    seo_last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Experience(EditableMixin, db.Model):
@@ -83,10 +120,15 @@ class Experience(EditableMixin, db.Model):
     organization: Mapped[str] = mapped_column(String(180), nullable=False)
     role: Mapped[str] = mapped_column(String(180), nullable=False)
     summary: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    source_markdown: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    rendered_html: Mapped[str] = mapped_column(Text, default="", nullable=False)
     start_date: Mapped[str | None] = mapped_column(String(40))
     end_date: Mapped[str | None] = mapped_column(String(40))
     visible: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     sort_position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    logo_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("media_assets.id")
+    )
 
 
 class Education(EditableMixin, db.Model):
@@ -140,3 +182,17 @@ Project.revisions = relationship(
     order_by=ContentRevision.revision_number,
     viewonly=True,
 )
+
+Project.gallery_items = relationship(
+    "ProjectGalleryItem",
+    cascade="all, delete-orphan",
+    passive_deletes=True,
+)
+
+
+def gallery_media(project: "Project") -> list[object]:
+    items = sorted(project.gallery_items, key=lambda item: (item.position, item.media_id))
+    return [item.media for item in items if item.media is not None]
+
+
+Project.gallery_assets = gallery_media

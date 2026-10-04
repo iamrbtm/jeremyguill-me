@@ -22,3 +22,14 @@ def test_render_markdown_adds_safe_link_rel():
 
     assert 'href="https://example.com"' in html
     assert 'rel="noopener noreferrer"' in html
+
+
+def test_render_markdown_preserves_sanitized_html():
+    html = render_markdown(
+        '<div class="csl-entry"><span>Author.</span> <i>Title</i>. '
+        '<a href="https://example.com">Source</a></div>'
+    )
+
+    assert '<div class="csl-entry">' in html
+    assert "<i>Title</i>" in html
+    assert 'href="https://example.com"' in html

@@ -26,3 +26,25 @@ def test_finish_authentication_creates_admin_session(client):
     )
 
     assert response.status_code == 204
+
+
+def test_bootstrap_token_signs_in_once(client, app):
+    with app.app_context():
+        token = app.test_cli_runner().invoke(args=["admin", "bootstrap-passkeys"]).output.rsplit(
+            "token=", 1
+        )[1].strip()
+
+    bootstrap = client.get(f"/admin/bootstrap?token={token}")
+    assert bootstrap.status_code == 200
+    assert b"Open admin dashboard" in bootstrap.data
+
+    response = client.post("/admin/bootstrap", data={"token": token})
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/admin")
+
+    dashboard = client.get("/admin")
+    assert dashboard.status_code == 200
+    assert b"Dashboard" in dashboard.data
+
+    reused = client.post("/admin/bootstrap", data={"token": token})
+    assert reused.status_code == 400

@@ -1,0 +1,18 @@
+<article class="project-card2 reveal">
+  <a class="project-card2__media" href="/work/{{ card.slug }}" aria-hidden="true" tabindex="-1">
+    {% if card.hero_media_id %}
+      <img src="/media/public/{{ card.hero_media_id }}/hero_desktop.webp"
+           width="1600" height="900"
+           alt="{{ card.hero_alt }}" loading="lazy">
+    {% endif %}
+  </a>
+  <div class="project-card2__body">
+    {% if card.year %}<p class="project-card2__meta">{{ card.year }}</p>{% endif %}
+    {% set heading = card_heading|default('h3') %}
+    <{{ heading }}><a href="/work/{{ card.slug }}">{{ card.title }}</a></{{ heading }}>
+    <p>{{ card.summary }}</p>
+    {% if card.result_headline %}<p class="project-card2__result"><strong>Result:</strong> {{ card.result_headline }}</p>{% endif %}
+    {% if card.stack %}<ul class="tag-list" aria-label="Technologies">{% for tag in card.stack %}<li>{{ tag }}</li>{% endfor %}</ul>{% endif %}
+    <a class="blue-link" href="/work/{{ card.slug }}">Read the case study<span class="visually-hidden">: {{ card.title }}</span></a>
+  </div>
+</article>

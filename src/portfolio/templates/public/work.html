@@ -1,0 +1,20 @@
+{% extends "public/base.html" %}
+{% block title %}Work | Jeremy Guill{% endblock %}
+{% block content %}
+<section class="page-section">
+  <p class="eyebrow">Portfolio</p>
+  <h1>Selected work</h1>
+  <p class="lede">Representative projects across scheduling automation, lending-library systems, FileMaker workflows, and database-backed operations.</p>
+
+  {% if cards %}
+    <div class="work-index card-grid">
+      {% set card_heading = 'h2' %}
+      {% for card in cards %}
+        {% include "components/project_card.html" %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Projects will appear here after they are published.</p>
+  {% endif %}
+</section>
+{% endblock %}

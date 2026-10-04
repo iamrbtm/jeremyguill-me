@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% block title %}Contact Detail{% endblock %}
+{% block content %}
+<section class="admin-panel">
+  <p class="eyebrow">Contact</p>
+  <h1>{{ submission.subject }}</h1>
+  <p>{{ submission.name }} · {{ submission.email }}</p>
+  <p>{{ submission.message }}</p>
+  <form method="post" action="{{ url_for('contact.admin_update_state', submission_id=submission.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <select name="state">
+      {% for state in ["unread", "read", "replied", "archived", "spam"] %}
+        <option value="{{ state }}" {% if submission.state == state %}selected{% endif %}>{{ state }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Update state</button>
+  </form>
+</section>
+{% endblock %}

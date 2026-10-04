@@ -1,8 +1,179 @@
-from flask import Blueprint, jsonify
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+)
+from sqlalchemy import select
+
+from portfolio.content.enums import PublicationState
+from portfolio.content.models import Project
+from portfolio.content.toc import enhance_case_study_html, reading_minutes
+from portfolio.extensions import db
+from portfolio.media.models import MediaAsset
+from portfolio.media.variants import media_root
+from portfolio.public.view_models import (
+    build_home_view,
+    build_project_cards,
+    published_projects,
+)
+from portfolio.security.validation import safe_redirect_target
+from portfolio.seo.schemas import SeoPage
+from portfolio.seo.services import build_metadata, resolve_redirect_chain
 
 public_bp = Blueprint("public", __name__)
+
+
+@public_bp.get("/media/<path:filename>")
+def serve_public_media(filename: str):
+    if ".." in filename or not filename.startswith("public/"):
+        abort(404)
+    return send_from_directory(media_root(), filename, max_age=2592000)
+
+
+@public_bp.get("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        current_app.static_folder,
+        "assets/img/favicon-32.png",
+        mimetype="image/png",
+        max_age=86400,
+    )
 
 
 @public_bp.route("/health/live")
 def liveness():
     return jsonify({"status": "ok"})
+
+
+@public_bp.get("/")
+def home():
+    view = build_home_view()
+    same_as = [u for u in (view.profile.linkedin_url, view.profile.github_url) if u]
+    metadata = build_metadata(
+        SeoPage(
+            title="Jeremy Guill | Software and Workflow Portfolio",
+            summary=view.profile.summary
+            or "Portfolio of practical software, database workflows, automation, and implementation support.",
+            canonical_path="/",
+            is_published=True,
+            kind="person",
+            name=view.profile.display_name or "Jeremy Guill",
+            seo_title=view.profile.seo_title,
+            seo_description=view.profile.seo_description,
+            extra={"sameAs": same_as} if same_as else None,
+        )
+    )
+    return render_template("public/home.html", view=view, metadata=metadata)
+
+
+@public_bp.get("/work")
+def work_index():
+    projects = published_projects()
+    metadata = build_metadata(
+        SeoPage(
+            title="Work | Jeremy Guill",
+            summary=(
+                "Projects across scheduling automation, lending-library systems, "
+                "FileMaker workflows, and database-backed operations."
+            ),
+            canonical_path="/work",
+            is_published=True,
+        )
+    )
+    return render_template(
+        "public/work.html",
+        projects=projects,
+        cards=build_project_cards(projects),
+        metadata=metadata,
+    )
+
+
+@public_bp.get("/work/<slug>")
+def project_detail(slug: str):
+    project = db.session.execute(
+        select(Project).where(Project.slug == slug, Project.state == PublicationState.PUBLISHED)
+    ).scalar_one_or_none()
+    if project is None:
+        redirect_target = resolve_redirect_chain(f"/work/{slug}")
+        safe_target = safe_redirect_target(redirect_target or "")
+        if safe_target:
+            return redirect(safe_target, code=308)
+        abort(404)
+    metadata = build_metadata(
+        SeoPage(
+            title=f"{project.title} | Jeremy Guill",
+            summary=project.summary,
+            canonical_path=f"/work/{project.slug}",
+            is_published=True,
+            kind="project",
+            seo_title=project.seo_title,
+            seo_description=project.seo_description,
+            breadcrumbs=[
+                ("Home", "/"),
+                ("Work", "/work"),
+                (project.title, f"/work/{project.slug}"),
+            ],
+            extra={"author": {"@type": "Person", "name": "Jeremy Guill"}},
+        )
+    )
+    hero_asset = (
+        db.session.get(MediaAsset, project.hero_media_id) if project.hero_media_id else None
+    )
+    gallery = project.gallery_assets()
+    body_html, toc = enhance_case_study_html(project.rendered_html)
+    all_projects = published_projects()
+    index = next((i for i, p in enumerate(all_projects) if p.id == project.id), None)
+    previous_project = all_projects[index - 1] if index is not None and index > 0 else None
+    next_project = (
+        all_projects[index + 1] if index is not None and index + 1 < len(all_projects) else None
+    )
+    return render_template(
+        "public/project.html",
+        project=project,
+        hero_asset=hero_asset,
+        gallery=gallery,
+        body_html=body_html,
+        toc=toc,
+        minutes=reading_minutes(project.rendered_html),
+        previous_project=previous_project,
+        next_project=next_project,
+        metadata=metadata,
+    )
+
+
+@public_bp.get("/experience")
+def experience():
+    metadata = build_metadata(
+        SeoPage(
+            title="Experience | Jeremy Guill",
+            summary="Professional experience and credentials for Jeremy Guill.",
+            canonical_path="/experience",
+            is_published=True,
+        )
+    )
+    return render_template("public/experience.html", view=build_home_view(), metadata=metadata)
+
+
+@public_bp.get("/contact")
+def contact():
+    import time
+
+    metadata = build_metadata(
+        SeoPage(
+            title="Contact | Jeremy Guill",
+            summary="Connect with Jeremy Guill about portfolio projects, software work, and technical collaboration.",
+            canonical_path="/contact",
+            is_published=True,
+        )
+    )
+    return render_template(
+        "public/contact.html",
+        metadata=metadata,
+        form_started_at=str(time.time()),
+        sent=request.args.get("sent") == "1",
+    )

@@ -1,0 +1,16 @@
+{% extends "admin/base.html" %}
+{% block title %}Contact Submissions{% endblock %}
+{% block content %}
+<section class="admin-panel">
+  <p class="eyebrow">Contact</p>
+  <h1>Submissions</h1>
+  {% for submission in submissions %}
+    <article>
+      <h2><a href="{{ url_for('contact.admin_detail', submission_id=submission.id) }}">{{ submission.subject }}</a></h2>
+      <p>{{ submission.name }} · {{ submission.state }} · {{ submission.delivery_status }}</p>
+    </article>
+  {% else %}
+    <p>No contact submissions yet.</p>
+  {% endfor %}
+</section>
+{% endblock %}
