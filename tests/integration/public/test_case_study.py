@@ -28,7 +28,7 @@ def test_case_study_has_glance_toc_breadcrumb_and_single_h1(client, db_session):
     assert html.count("<h1") == 1
     assert 'aria-label="Breadcrumb"' in html and 'href="/work"' in html
     assert "Creator" in html and "Flask" in html and "2025" in html and "Faster" in html
-    assert 'aria-label="On this page"' in html and 'href="#a"' in html
+    assert 'aria-label="On this page"' in html and 'href="#s-a"' in html
     assert "min read" in html
 
 

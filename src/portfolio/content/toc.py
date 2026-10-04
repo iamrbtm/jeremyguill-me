@@ -29,7 +29,7 @@ def enhance_case_study_html(html: str) -> tuple[str, list[TocItem]]:
 
     def add_id(match: re.Match[str]) -> str:
         text = unescape(_TAG.sub("", match.group(1))).strip()
-        base = _slug(text)
+        base = f"s-{_slug(text)}"
         slug, count = base, 2
         while slug in used:
             slug, count = f"{base}-{count}", count + 1

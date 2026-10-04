@@ -8,8 +8,8 @@ def test_adds_unique_ids_and_builds_toc():
         "<h2>The Problem</h2><p>x</p><h2>The Problem</h2><h2>What I Built &amp; Why</h2>"
     )
 
-    assert [i.id for i in items] == ["the-problem", "the-problem-2", "what-i-built-why"]
-    assert '<h2 id="the-problem">' in html and '<h2 id="the-problem-2">' in html
+    assert [i.id for i in items] == ["s-the-problem", "s-the-problem-2", "s-what-i-built-why"]
+    assert '<h2 id="s-the-problem">' in html and '<h2 id="s-the-problem-2">' in html
     assert items[2].text == "What I Built & Why"
 
 
@@ -28,9 +28,15 @@ def test_tables_are_wrapped_for_horizontal_scroll():
 def test_heading_with_only_symbols_gets_fallback_id():
     _, items = enhance_case_study_html("<h2>???</h2>")
 
-    assert items[0].id == "section"
+    assert items[0].id == "s-section"
 
 
 def test_reading_minutes_has_floor_of_one():
     assert reading_minutes("<p>short</p>") == 1
     assert reading_minutes("<p>" + "word " * 650 + "</p>") == 3
+
+
+def test_heading_named_main_does_not_collide_with_the_skip_link_target():
+    html, items = enhance_case_study_html("<h2>Main</h2>")
+
+    assert items[0].id == "s-main" and 'id="main"' not in html
