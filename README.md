@@ -66,6 +66,14 @@ uv run pytest -q && uv run ruff check . && uv run mypy src && docker compose con
 
 See [docs/release-checklist.md](docs/release-checklist.md) before each release.
 
+## Production Deployment
+
+Production deployments MUST set all three of these, or the app refuses to boot:
+
+- `APP_ENV=production` (compose defaults to development; the origin guard and Secure cookies depend on it)
+- `PUBLIC_ORIGIN=https://<your-domain>` (https, not localhost)
+- `SECRET_KEY` of 32 or more characters
+
 ## Production Verification
 
 After deployment and HTTPS termination, run:
