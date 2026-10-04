@@ -33,10 +33,29 @@ DEFAULT_ORIGIN = "https://jeremyguill.me"
 DEFAULT_OUTPUT = REPO_ROOT / "one_page" / "index.html"
 FETCH_TIMEOUT = 20.0
 
+_TAG_SPAN = re.compile(r"<[^>]*>")
 _ID_ATTR = re.compile(r"""\sid\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)""", re.IGNORECASE)
+_COMMENT = re.compile(r"<!--.*?(?:-->|\Z)", re.DOTALL)
 _SCRIPT = re.compile(r"<script\b.*?</script\s*>|<script\b[^>]*>", re.IGNORECASE | re.DOTALL)
 _TEMPLATE_TAG = re.compile(r"</?template\b[^>]*>", re.IGNORECASE)
-_ROOT_URL = re.compile(r"""\b(src|href)=(["'])/(?!/)""", re.IGNORECASE)
+_ROOT_URL = re.compile(r"""\b(src|href)(\s*=\s*)(["']?)/(?!/)""", re.IGNORECASE)
+_MAX_PASSES = 20
+
+
+def _strip_dangerous(html: str) -> str:
+    """Remove comments, scripts and template tags until nothing more can be removed."""
+    for _ in range(_MAX_PASSES):
+        cleaned = _TEMPLATE_TAG.sub("", _SCRIPT.sub("", _COMMENT.sub("", html)))
+        if cleaned == html:
+            return cleaned
+        html = cleaned
+    # Still changing after the cap: drop every angle bracket rather than risk a reassembled tag.
+    return html.replace("<", "&lt;")
+
+
+def _fix_tag(origin: str, match: re.Match[str]) -> str:
+    tag = _ID_ATTR.sub("", match.group(0))
+    return _ROOT_URL.sub(lambda m: f"{m.group(1)}{m.group(2)}{m.group(3)}{origin}/", tag)
 
 
 class BuildError(Exception):
@@ -45,12 +64,10 @@ class BuildError(Exception):
 
 def _prepare_body(html: str, origin: str, *, tables: bool) -> Markup:
     """Make CMS-sanitized HTML safe to embed: no ids, scripts or template tags; absolute URLs."""
-    html = _SCRIPT.sub("", html or "")
-    html = _TEMPLATE_TAG.sub("", html)
+    html = _strip_dangerous(html or "")
     if tables:
         html, _ = enhance_case_study_html(html)
-    html = _ID_ATTR.sub("", html)
-    html = _ROOT_URL.sub(lambda m: f"{m.group(1)}={m.group(2)}{origin}/", html)
+    html = _TAG_SPAN.sub(lambda m: _fix_tag(origin, m), html)
     return Markup(html)  # noqa: S704 - sanitized upstream by nh3, hardened above
 
 

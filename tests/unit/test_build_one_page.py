@@ -258,3 +258,44 @@ def test_script_runs_as_program(tmp_path):
     )
     assert result.returncode == 1
     assert not (tmp_path / "o.html").exists()
+
+
+def _body(html: str, tables: bool = False) -> str:
+    return str(bop._prepare_body(html, ORIGIN, tables=tables))
+
+
+@pytest.mark.parametrize(
+    ("raw", "forbidden"),
+    [
+        ("<scr<script>ipt>alert(1)", "<script"),
+        ("<scr<script></script>ipt>alert(1)</script>", "<script"),
+        ("<templ<template>ate>x", "<template"),
+        ("<templ<template>ate>x</templ</template>ate>", "template"),
+    ],
+)
+def test_prepare_body_cannot_reassemble_tags(raw, forbidden):
+    assert forbidden not in _body(raw).lower()
+
+
+def test_prepare_body_strips_comments_including_unclosed():
+    assert _body("a<!-- hidden -->b") == "ab"
+    assert _body("a<!-- never closed <b>x</b>") == "a"
+    assert "<scr" not in _body("<scr<!-- x -->ipt>alert(1)</script>").lower()
+
+
+def test_id_removed_only_inside_real_tags():
+    assert _body('<h2 id="x">T</h2>') == "<h2>T</h2>"
+    assert _body('<p>&lt;div id=&quot;x&quot;&gt; and &lt;div id="x"&gt;</p>').count("id=") == 2
+    assert 'id="x"' in _body('<pre><code>&lt;div id="x"&gt;</code></pre>')
+
+
+def test_unquoted_root_relative_urls_are_absolutised():
+    assert _body("<img src=/y.png alt=a>") == f"<img src={ORIGIN}/y.png alt=a>"
+    assert _body('<a href="/z">z</a>') == f'<a href="{ORIGIN}/z">z</a>'
+    assert _body("<a href=//cdn.test/x>x</a>") == "<a href=//cdn.test/x>x</a>"
+    assert "&lt;a href=/z" in _body("<p>&lt;a href=/z&gt;</p>")
+
+
+def test_focus_return_prefers_title_link():
+    js = (ROOT / "scripts" / "one_page" / "app.js").read_text(encoding="utf-8")
+    assert 'querySelector(`h3 a[data-case="${attr}"]`)' in js

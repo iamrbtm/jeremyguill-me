@@ -47,10 +47,10 @@
     return null;
   };
   const cardLinkFor = (slug) => {
-    for (const link of document.querySelectorAll("a[data-case]")) {
-      if (link.getAttribute("data-case") === slug) return link;
-    }
-    return null;
+    // Prefer the title link: the media link is aria-hidden and not focusable.
+    const attr = CSS.escape(slug);
+    return document.querySelector(`h3 a[data-case="${attr}"]`)
+      || document.querySelector(`a[data-case="${attr}"]`);
   };
   const slugFromHash = () => {
     if (!location.hash.startsWith(PREFIX)) return null;
