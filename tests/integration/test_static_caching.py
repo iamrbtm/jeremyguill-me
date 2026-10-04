@@ -43,3 +43,25 @@ def test_font_preload_matches_font_face_url(client):
     assert 'href="/static/assets/fonts/open-sans-var.woff2"' in tag
     assert "crossorigin" in tag
     assert 'url("fonts/open-sans-var.woff2")' in css
+
+
+def _conditional(client, url):
+    etag = client.get(url).headers["ETag"]
+    return client.get(url, headers={"If-None-Match": etag})
+
+
+def test_304_for_hashed_url_keeps_immutable_cache(client):
+    html = client.get("/").get_data(as_text=True)
+    href = re.search(r'href="(/static/assets/site\.css\?v=[0-9a-f]{10})"', html).group(1)
+
+    response = _conditional(client, href)
+
+    assert response.status_code == 304
+    assert "immutable" in response.headers["Cache-Control"]
+
+
+def test_304_for_unhashed_url_keeps_short_cache(client):
+    response = _conditional(client, "/static/assets/site.css")
+
+    assert response.status_code == 304
+    assert "max-age=3600" in response.headers["Cache-Control"]

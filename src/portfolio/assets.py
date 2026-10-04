@@ -27,7 +27,7 @@ def static_url(filename: str) -> str:
 
 
 def apply_cache_headers(response: Response) -> Response:
-    if request.endpoint == "static" and response.status_code == 200:
+    if request.endpoint == "static" and response.status_code in (200, 304):
         if request.args.get("v"):
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
         else:
