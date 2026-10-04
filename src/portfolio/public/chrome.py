@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from functools import cached_property
 from pathlib import Path
 
-from flask import current_app
+from flask import current_app, request
 from sqlalchemy import select
 
 from portfolio.content.enums import PublicationState
@@ -50,6 +50,8 @@ class SiteChrome:
 
     @cached_property
     def analytics(self) -> dict[str, str] | None:
+        if request.path.startswith("/admin"):
+            return None
         url = current_app.config.get("ANALYTICS_SCRIPT_URL")
         site_id = current_app.config.get("ANALYTICS_WEBSITE_ID")
         if analytics_origin(url, site_id) is None:

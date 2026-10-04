@@ -128,3 +128,15 @@ def test_tag_present_iff_origin_in_csp(client, app, url, site_id, origin):
     in_csp = f"script-src 'self' {origin}" in _csp(client)
 
     assert tag == in_csp
+
+
+def test_admin_404_has_no_analytics_tag_or_csp_origin(client, app):
+    _configure(app)
+
+    admin = client.get("/admin/nope")
+    public = client.get("/nope-public")
+
+    assert admin.status_code == 404 and public.status_code == 404
+    assert "data-website-id" not in admin.get_data(as_text=True)
+    assert "stats.example.test" not in admin.headers["Content-Security-Policy"]
+    assert "data-website-id" in public.get_data(as_text=True)
