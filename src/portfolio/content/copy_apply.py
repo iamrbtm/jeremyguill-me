@@ -12,8 +12,10 @@ from pathlib import Path
 
 from sqlalchemy import select
 
+from portfolio.content.editor_contract import validate_editor_source
 from portfolio.content.models import BlogPost, Experience, Project
 from portfolio.content.rendering import render_experience_markdown, render_markdown
+from portfolio.content.revisions import create_revision
 from portfolio.extensions import db
 
 COPY_DIR = Path(__file__).parent / "copy"
@@ -113,6 +115,10 @@ def _find(doc: CopyDoc) -> Project | BlogPost | Experience:
 
 def apply_copy_doc(doc: CopyDoc, *, dry_run: bool = False) -> str:
     entity = _find(doc)
+    if doc.body:
+        validation = validate_editor_source(doc.body)
+        if not validation.valid:
+            raise CopyError(" ".join(validation.errors))
     changes: dict[str, str | None] = {
         name: (value or None) if name in NULLABLE else value for name, value in doc.fields.items()
     }
@@ -131,6 +137,7 @@ def apply_copy_doc(doc: CopyDoc, *, dry_run: bool = False) -> str:
     if not changed:
         return f"{doc.kind} {doc.match}: unchanged"
     if not dry_run:
+        create_revision(entity, reason="apply-copy")
         for name in changed:
             setattr(entity, name, changes[name])
         entity.version = (entity.version or 0) + 1

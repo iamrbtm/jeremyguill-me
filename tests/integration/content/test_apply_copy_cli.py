@@ -241,3 +241,61 @@ def test_blog_doc_renders_markdown(app, db_session, tmp_path):
     db_session.refresh(post)
     assert result.exit_code == 0, result.output
     assert "<h2>Heading</h2>" in post.rendered_html and post.summary == "New."
+
+
+def _revisions(db_session):
+    from portfolio.content.models import ContentRevision
+
+    return list(db_session.scalars(select(ContentRevision)))
+
+
+def test_changed_apply_creates_one_revision_of_the_old_state(app, db_session, tmp_path):
+    project = _project()
+    project.source_markdown = "old body"
+    db_session.add(project)
+    db_session.commit()
+    path = _write(tmp_path, DOC)
+
+    assert _run(app, path).exit_code == 0
+    revisions = _revisions(db_session)
+    assert len(revisions) == 1
+    assert revisions[0].reason == "apply-copy" and revisions[0].source_markdown == "old body"
+
+    assert _run(app, path).exit_code == 0
+    assert len(_revisions(db_session)) == 1
+
+
+def test_dry_run_creates_no_revision(app, db_session, tmp_path):
+    db_session.add(_project())
+    db_session.commit()
+
+    assert _run(app, "--dry-run", _write(tmp_path, DOC)).exit_code == 0
+
+    assert _revisions(db_session) == []
+
+
+def test_external_image_body_is_rejected_even_in_dry_run(app, db_session, tmp_path):
+    db_session.add(_project())
+    db_session.commit()
+    doc = "---\ntype: project\nmatch: pollywog\nsummary: X.\n---\n![a](https://evil.example/x.png)\n"
+
+    for args in (("--dry-run",), ()):
+        result = _run(app, *args, _write(tmp_path, doc))
+        assert result.exit_code != 0 and "approved media" in result.output
+
+    project = db_session.scalar(select(Project))
+    db_session.refresh(project)
+    assert project.summary == "old" and _revisions(db_session) == []
+
+
+def test_oversized_body_is_rejected_and_nothing_written(app, db_session, tmp_path):
+    db_session.add(_project())
+    db_session.commit()
+    doc = "---\ntype: project\nmatch: pollywog\nsummary: X.\n---\n" + "a" * 500_001 + "\n"
+
+    result = _run(app, _write(tmp_path, doc))
+
+    project = db_session.scalar(select(Project))
+    db_session.refresh(project)
+    assert result.exit_code != 0 and "500 KB" in result.output
+    assert project.summary == "old" and _revisions(db_session) == []
