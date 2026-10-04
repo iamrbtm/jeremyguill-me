@@ -89,7 +89,6 @@ def work_index():
         "public/work.html",
         projects=projects,
         cards=build_project_cards(projects),
-        view=build_home_view(),
         metadata=metadata,
     )
 
@@ -143,7 +142,6 @@ def project_detail(slug: str):
         minutes=reading_minutes(project.rendered_html),
         previous_project=previous_project,
         next_project=next_project,
-        view=build_home_view(),
         metadata=metadata,
     )
 
@@ -175,7 +173,6 @@ def contact():
     )
     return render_template(
         "public/contact.html",
-        view=build_home_view(),
         metadata=metadata,
         form_started_at=str(time.time()),
         sent=request.args.get("sent") == "1",

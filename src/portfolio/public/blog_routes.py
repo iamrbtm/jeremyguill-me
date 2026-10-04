@@ -8,7 +8,6 @@ from sqlalchemy import select
 from portfolio.content.enums import PublicationState
 from portfolio.content.models import BlogPost
 from portfolio.extensions import db
-from portfolio.public.view_models import build_home_view
 from portfolio.seo.schemas import SeoPage
 from portfolio.seo.services import build_metadata
 
@@ -32,7 +31,7 @@ def index():
         )
     )
     return render_template(
-        "public/blog_index.html", view=build_home_view(), posts=list(posts), metadata=metadata
+        "public/blog_index.html", posts=list(posts), metadata=metadata
     )
 
 
@@ -60,7 +59,7 @@ def detail(slug: str):
         )
     )
     return render_template(
-        "public/blog_post.html", view=build_home_view(), post=post, metadata=metadata
+        "public/blog_post.html", post=post, metadata=metadata
     )
 
 

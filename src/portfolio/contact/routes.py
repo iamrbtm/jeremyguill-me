@@ -7,7 +7,6 @@ from sqlalchemy import select
 
 from portfolio.auth.decorators import passkey_required
 from portfolio.extensions import db
-from portfolio.public.view_models import build_home_view
 from portfolio.seo.schemas import SeoPage
 from portfolio.seo.services import build_metadata
 
@@ -21,7 +20,6 @@ contact_bp = Blueprint("contact", __name__)
 @contact_bp.post("/contact")
 def submit_contact():
     form = ContactForm.from_mapping(request.form)
-    view = build_home_view()
     metadata = build_metadata(
         SeoPage(
             title="Contact | Jeremy Guill",
@@ -31,7 +29,7 @@ def submit_contact():
         )
     )
     if not form.validate():
-        return render_template("public/contact.html", view=view, metadata=metadata, form=form), 422
+        return render_template("public/contact.html", metadata=metadata, form=form), 422
     submission = services.save_submission(form.command)
     if submission is None:
         return redirect(url_for("public.contact", sent=1))
