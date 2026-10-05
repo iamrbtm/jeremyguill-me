@@ -157,7 +157,8 @@ def test_ci_build_success(tmp_path: Path) -> None:
     r, out = _run_ci(tmp_path, 0)
     assert r.returncode == 0
     assert "skip=true" not in out
-    assert "run python scripts/build_one_page.py --output one_page/index.html" in r.stdout
+    expected = "run --frozen --no-dev python scripts/build_one_page.py --output one_page/index.html"
+    assert expected in r.stdout
 
 
 def test_ci_build_exit_3_skips_quietly(tmp_path: Path) -> None:
