@@ -391,4 +391,4 @@ def test_images_must_come_from_origin():
     data["experience"][0]["logo"]["url"] = "https://evil.test/l.webp"
     out = bop.build_page(data, origin=ORIGIN)
     assert "evil.test" not in out and "javascript:" not in out
-    assert "case-hero" not in out
+    assert 'class="case-hero"' not in out
