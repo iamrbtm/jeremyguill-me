@@ -52,9 +52,6 @@
     color-scheme: dark;
   }
   img { filter: brightness(.92); }
-  .button-primary { color: var(--paper); }
-  .button-primary:hover { color: var(--blue-bright); }
-  .site-hero .button-primary:hover { color: #fff; }
 }
 
 * { box-sizing: border-box; }
@@ -202,6 +199,12 @@ section[id] { scroll-margin-top: var(--header-h); }
 .button-primary:hover { background: transparent; color: var(--blue-bright); }
 .button-outline { background: transparent; border-color: #fff; color: #fff; }
 .button-outline:hover { background: rgba(255, 255, 255, .14); }
+/* Dark theme: light-blue fill needs dark text (must follow the base rules above). */
+@media (prefers-color-scheme: dark) {
+  .button-primary { color: var(--paper); }
+  .button-primary:hover { color: var(--blue-bright); }
+  .site-hero .button-primary:hover { color: #fff; }
+}
 
 /* Hero */
 .site-hero {

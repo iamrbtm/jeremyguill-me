@@ -299,3 +299,10 @@ def test_unquoted_root_relative_urls_are_absolutised():
 def test_focus_return_prefers_title_link():
     js = (ROOT / "scripts" / "one_page" / "app.js").read_text(encoding="utf-8")
     assert 'querySelector(`h3 a[data-case="${attr}"]`)' in js
+
+
+def test_dark_button_override_follows_base_rule():
+    css = (ROOT / "scripts" / "one_page" / "style.css").read_text(encoding="utf-8")
+    base = css.index(".button-primary { background: var(--blue)")
+    dark = css.index(".button-primary { color: var(--paper); }")
+    assert dark > base
