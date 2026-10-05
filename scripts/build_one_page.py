@@ -67,6 +67,11 @@ def _prepare_body(html: str, origin: str, *, tables: bool) -> Markup:
     html = _strip_dangerous(html or "")
     if tables:
         html, _ = enhance_case_study_html(html)
+        # Scrollable regions must be keyboard focusable (axe: scrollable-region-focusable).
+        html = html.replace(
+            '<div class="table-scroll">',
+            '<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable table">',
+        )
     html = _TAG_SPAN.sub(lambda m: _fix_tag(origin, m), html)
     return Markup(html)  # noqa: S704 - sanitized upstream by nh3, hardened above
 

@@ -169,7 +169,7 @@ def test_links_and_rel(page):
 
 
 def test_body_preserved_tables_wrapped_and_no_duplicate_ids(page):
-    assert page.count('<div class="table-scroll"><table>') == 2
+    assert page.count('<div class="table-scroll" tabindex="0" role="region"') == 2
     ids = [a["id"] for _, a in parse(page) if a.get("id")]
     assert len(ids) == len(set(ids))
     assert "alert(1)" not in page
