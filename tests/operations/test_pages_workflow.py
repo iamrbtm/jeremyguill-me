@@ -137,7 +137,7 @@ def _run_ci(tmp_path: Path, code: int) -> tuple[subprocess.CompletedProcess[str]
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     fake = bin_dir / "uv"
-    fake.write_text(f"#!/bin/sh\necho fake-uv \"$@\"\nexit {code}\n", encoding="utf-8")
+    fake.write_text(f'#!/bin/sh\necho fake-uv "$@"\nexit {code}\n', encoding="utf-8")
     fake.chmod(0o755)
     out = tmp_path / "gh_output"
     out.write_text("", encoding="utf-8")
