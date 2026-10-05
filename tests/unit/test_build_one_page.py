@@ -414,3 +414,32 @@ def test_cli_origin_mismatch_flag(tmp_path, capsys):
     assert not out.exists() and "origin" in capsys.readouterr().err
     assert bop.main([*argv, "--allow-origin-mismatch"]) == 0
     assert out.exists()
+
+
+def test_source_comment_never_leaks_local_paths():
+    local = bop.build_page(make_data(), origin=ORIGIN, source="/mnt/x/y/site.json")
+    assert "/mnt/x" not in local and "from site.json on" in local
+    remote = bop.build_page(make_data(), origin=ORIGIN, source="https://h.test/api/s.json")
+    assert "from https://h.test/api/s.json on" in remote
+
+
+def test_cli_reports_template_errors_cleanly(tmp_path, capsys):
+    data = make_data()
+    del data["projects"][0]["title"]
+    source = tmp_path / "site.json"
+    source.write_text(json.dumps(data))
+    out = tmp_path / "o.html"
+    argv = ["--source", str(source), "--origin", ORIGIN, "--output", str(out),
+            "--no-copy-overrides"]
+    assert bop.main(argv) == 1
+    assert not out.exists() and "error" in capsys.readouterr().err
+
+
+def test_applied_overrides_are_reported(capsys):
+    bop.build_page(make_data(), origin=ORIGIN, overrides={"alpha": {"summary": "S"}})
+    assert "applied copy override: alpha" in capsys.readouterr().err
+
+
+def test_pre_blocks_are_keyboard_focusable():
+    out = _body("<pre><code>x = 1</code></pre>")
+    assert '<pre tabindex="0" role="region" aria-label="Code sample">' in out

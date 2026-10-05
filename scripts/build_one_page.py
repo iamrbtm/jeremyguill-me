@@ -20,7 +20,7 @@ from typing import Any
 
 import httpx
 import nh3
-from jinja2 import Environment, StrictUndefined
+from jinja2 import Environment, StrictUndefined, UndefinedError
 from markupsafe import Markup
 
 from portfolio.content.copy_apply import CopyError, parse_copy_file
@@ -107,6 +107,13 @@ def _https_url(value: Any) -> str | None:
     return value if isinstance(value, str) and value.startswith("https://") else None
 
 
+def _public_source(source: str) -> str:
+    """Name the source in the page comment without leaking local filesystem paths."""
+    if source.startswith(("http://", "https://")):
+        return source
+    return Path(source).name
+
+
 def _apply_overrides(
     projects: list[dict[str, Any]], overrides: dict[str, dict[str, Any]] | None
 ) -> list[dict[str, Any]]:
@@ -117,6 +124,8 @@ def _apply_overrides(
     merged = []
     for project in projects:
         item = dict(project)
+        if project["slug"] in overrides:
+            print(f"applied copy override: {project['slug']}", file=sys.stderr)
         for key, value in overrides.get(project["slug"], {}).items():
             item[key] = value
         merged.append(item)
@@ -178,7 +187,7 @@ def build_page(
     template = _environment().from_string((ASSET_DIR / "template.html").read_text("utf-8"))
     return template.render(
         origin=origin,
-        source=source.replace("--", "- -"),
+        source=_public_source(source).replace("--", "- -"),
         generated_on=now.strftime("%Y-%m-%d"),
         year=now.year,
         title=f"{name} | Software and Workflow Portfolio",
@@ -262,8 +271,8 @@ def main(argv: list[str] | None = None) -> int:
             source=source,
             allow_origin_mismatch=args.allow_origin_mismatch,
         )
-    except (BuildError, KeyError, TypeError) as exc:
-        detail = repr(exc) if isinstance(exc, KeyError | TypeError) else str(exc)
+    except (BuildError, KeyError, TypeError, UndefinedError) as exc:
+        detail = repr(exc) if isinstance(exc, KeyError | TypeError | UndefinedError) else str(exc)
         print(f"error: {detail}", file=sys.stderr)
         return 1
     args.output.parent.mkdir(parents=True, exist_ok=True)
