@@ -133,9 +133,16 @@ def build_page(
     origin: str,
     overrides: dict[str, dict[str, Any]] | None = None,
     source: str = "site-content.json",
+    allow_origin_mismatch: bool = False,
     now: datetime | None = None,
 ) -> str:
     origin = origin.rstrip("/")
+    export_origin = str(data.get("origin") or "").rstrip("/")
+    if export_origin != origin and not allow_origin_mismatch:
+        raise BuildError(
+            f"export origin {export_origin or '(missing)'} does not match --origin {origin}; "
+            "pass --allow-origin-mismatch if this is intended"
+        )
     now = now or datetime.now(UTC)
     profile = data["profile"]
     name = profile.get("display_name") or "Jeremy Guill"
@@ -237,13 +244,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--origin", default=DEFAULT_ORIGIN)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--no-copy-overrides", action="store_true")
+    parser.add_argument(
+        "--allow-origin-mismatch",
+        action="store_true",
+        help="build even if the export's own origin differs from --origin",
+    )
     args = parser.parse_args(argv)
     origin = args.origin.rstrip("/")
     source = args.source or f"{origin}/api/site-content.json"
     try:
         data = load_source(source)
         overrides = None if args.no_copy_overrides else load_copy_overrides()
-        html = build_page(data, origin=origin, overrides=overrides, source=source)
+        html = build_page(
+            data,
+            origin=origin,
+            overrides=overrides,
+            source=source,
+            allow_origin_mismatch=args.allow_origin_mismatch,
+        )
     except (BuildError, KeyError, TypeError) as exc:
         detail = repr(exc) if isinstance(exc, KeyError | TypeError) else str(exc)
         print(f"error: {detail}", file=sys.stderr)

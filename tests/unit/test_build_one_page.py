@@ -392,3 +392,25 @@ def test_images_must_come_from_origin():
     out = bop.build_page(data, origin=ORIGIN)
     assert "evil.test" not in out and "javascript:" not in out
     assert 'class="case-hero"' not in out
+
+
+def test_export_origin_mismatch_fails_unless_allowed():
+    data = make_data()
+    data["origin"] = "https://other.test"
+    with pytest.raises(bop.BuildError, match="origin"):
+        bop.build_page(data, origin=ORIGIN)
+    assert ORIGIN in bop.build_page(data, origin=ORIGIN, allow_origin_mismatch=True)
+
+
+def test_cli_origin_mismatch_flag(tmp_path, capsys):
+    data = make_data()
+    data["origin"] = "https://other.test"
+    source = tmp_path / "site.json"
+    source.write_text(json.dumps(data))
+    out = tmp_path / "o.html"
+    argv = ["--source", str(source), "--origin", ORIGIN, "--output", str(out),
+            "--no-copy-overrides"]
+    assert bop.main(argv) == 1
+    assert not out.exists() and "origin" in capsys.readouterr().err
+    assert bop.main([*argv, "--allow-origin-mismatch"]) == 0
+    assert out.exists()
