@@ -1,9 +1,10 @@
-name: Publish one-page site
+name: Build and publish one-page site
 
 on:
   push:
     branches: [main]
-    paths: ["one_page/index.html"]
+  schedule:
+    - cron: "23 */6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -18,16 +19,33 @@ jobs:
     # workflow_dispatch may be run against any branch; only ever publish reviewed main.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v4
         with:
           persist-credentials: false
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          # pyproject requires Python >=3.14,<3.15; uv downloads it if the runner lacks it.
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: uv sync --frozen --no-dev
+
+      # Exit 3 = production does not serve /api/site-content.json yet: skip, do not fail.
+      - name: Build one-page site
+        id: build
+        run: sh scripts/ci_build_one_page.sh
+
       - name: Check one-page build
+        if: steps.build.outputs.skip != 'true'
         run: sh scripts/check_one_page.sh
 
       - name: Checkout Pages repo
+        if: steps.build.outputs.skip != 'true'
         uses: actions/checkout@v4
         with:
           repository: iamrbtm/iamrbtm.github.io
@@ -35,11 +53,13 @@ jobs:
           path: pages-repo
 
       - name: Copy index.html only
+        if: steps.build.outputs.skip != 'true'
         run: |
           set -euo pipefail
           cp one_page/index.html pages-repo/index.html
 
       - name: Commit and push
+        if: steps.build.outputs.skip != 'true'
         working-directory: pages-repo
         run: |
           set -euo pipefail

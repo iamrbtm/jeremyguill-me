@@ -23,16 +23,39 @@ def _code_lines(text: str) -> str:
 
 
 def test_name_and_triggers(text: str) -> None:
-    assert re.search(r"^name: Publish one-page site$", text, re.M)
+    assert re.search(r"^name: Build and publish one-page site$", text, re.M)
     on_block = re.search(r"^on:\n((?:[ \t]+.*\n|\n)+)", text, re.M)
     assert on_block is not None
     body = on_block.group(1)
     top_keys = re.findall(r"^  (\w+):", body, re.M)
-    assert top_keys == ["push", "workflow_dispatch"]
+    assert top_keys == ["push", "schedule", "workflow_dispatch"]
     assert re.search(r"branches: \[main\]|branches:\n\s+- main", body)
-    assert re.search(
-        r'paths: \["one_page/index\.html"\]|paths:\n\s+- "?one_page/index\.html"?', body
-    )
+    assert "paths" not in body
+    assert re.findall(r"cron: (.+)", body) == ['"23 */6 * * *"']
+    assert re.search(r"^  workflow_dispatch:\s*$", body, re.M)
+    assert "inputs" not in body
+
+
+def test_timeout_and_setup_uv_pinned(text: str) -> None:
+    m = re.search(r"timeout-minutes: (\d+)", text)
+    assert m and int(m.group(1)) <= 15
+    assert re.search(r"uses: astral-sh/setup-uv@v\d+$", text, re.M)
+    assert 'python-version: "3.14"' in text
+
+
+def test_build_steps(text: str) -> None:
+    assert "uv sync --frozen --no-dev" in text
+    assert "run: sh scripts/ci_build_one_page.sh" in text
+    build = re.search(r"- name: Build one-page site\n\s+id: build\n", text)
+    assert build is not None
+    # Every publish step is skipped when the build reported production not ready.
+    for name in ("Check one-page build", "Checkout Pages repo", "Copy index.html only",
+                 "Commit and push"):
+        block = re.search(rf"- name: {name}\n((?:\s{{8}}.*\n)+)", text)
+        assert block and "if: steps.build.outputs.skip != 'true'" in block.group(1), name
+    order = [text.index(x) for x in ("scripts/ci_build_one_page.sh", "scripts/check_one_page.sh",
+                                     "Checkout Pages repo")]
+    assert order == sorted(order)
 
 
 def test_no_pull_request(text: str) -> None:
@@ -79,7 +102,8 @@ def test_first_checkout_does_not_persist_credentials(text: str) -> None:
 
 def test_actions_pinned_to_major(text: str) -> None:
     uses = re.findall(r"uses: (\S+)", text)
-    assert uses and all(u == "actions/checkout@v4" for u in uses)
+    assert uses and all(re.fullmatch(r"[\w./-]+@v\d+", u) for u in uses)
+    assert uses.count("actions/checkout@v4") == 2
 
 
 def test_copies_only_one_page_index(text: str) -> None:
@@ -104,6 +128,50 @@ def test_publish_job_only_runs_on_main(text: str) -> None:
 
 def test_workflow_uses_guard_script(text: str) -> None:
     assert "sh scripts/check_one_page.sh" in text
+
+
+CI_BUILD = ROOT / "scripts" / "ci_build_one_page.sh"
+
+
+def _run_ci(tmp_path: Path, code: int) -> tuple[subprocess.CompletedProcess[str], str]:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    fake = bin_dir / "uv"
+    fake.write_text(f"#!/bin/sh\necho fake-uv \"$@\"\nexit {code}\n", encoding="utf-8")
+    fake.chmod(0o755)
+    out = tmp_path / "gh_output"
+    out.write_text("", encoding="utf-8")
+    env = {"PATH": f"{bin_dir}:/usr/bin:/bin", "GITHUB_OUTPUT": str(out)}
+    r = subprocess.run(
+        ["sh", str(CI_BUILD)], cwd=tmp_path, env=env, capture_output=True, text=True, check=False
+    )
+    return r, out.read_text(encoding="utf-8")
+
+
+def test_ci_build_script_is_executable_posix_sh() -> None:
+    assert CI_BUILD.stat().st_mode & 0o111
+    assert CI_BUILD.read_text(encoding="utf-8").splitlines()[0] == "#!/bin/sh"
+
+
+def test_ci_build_success(tmp_path: Path) -> None:
+    r, out = _run_ci(tmp_path, 0)
+    assert r.returncode == 0
+    assert "skip=true" not in out
+    assert "run python scripts/build_one_page.py --output one_page/index.html" in r.stdout
+
+
+def test_ci_build_exit_3_skips_quietly(tmp_path: Path) -> None:
+    r, out = _run_ci(tmp_path, 3)
+    assert r.returncode == 0
+    assert "skip=true" in out
+    assert "::notice::" in r.stdout
+
+
+@pytest.mark.parametrize("code", [1, 2, 7])
+def test_ci_build_other_failures_propagate(tmp_path: Path, code: int) -> None:
+    r, out = _run_ci(tmp_path, code)
+    assert r.returncode == code
+    assert "skip=true" not in out
 
 
 def _run(tmp_path: Path, content: str | None) -> subprocess.CompletedProcess[str]:
