@@ -66,6 +66,10 @@ class BuildError(Exception):
     pass
 
 
+class SourceNotFound(BuildError):
+    """The URL source answered HTTP 404 (production not deployed yet)."""
+
+
 def _prepare_body(html: str, origin: str, *, tables: bool) -> Markup:
     """Re-sanitise CMS HTML with the site allowlist (parser based) and absolutise URLs.
 
@@ -188,7 +192,6 @@ def build_page(
     return template.render(
         origin=origin,
         source=_public_source(source).replace("--", "- -"),
-        generated_on=now.strftime("%Y-%m-%d"),
         year=now.year,
         title=f"{name} | Software and Workflow Portfolio",
         description=summary,
@@ -238,6 +241,12 @@ def load_source(source: str) -> dict[str, Any]:
         else:
             text = Path(source).read_text(encoding="utf-8")
         data = json.loads(text)
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code == 404:
+            raise SourceNotFound(
+                f"production not ready: {source} returned 404 (deploy the main site first)"
+            ) from exc
+        raise BuildError(f"could not read {source}: {exc}") from exc
     except (httpx.HTTPError, OSError) as exc:
         raise BuildError(f"could not read {source}: {exc}") from exc
     except json.JSONDecodeError as exc:
@@ -271,6 +280,9 @@ def main(argv: list[str] | None = None) -> int:
             source=source,
             allow_origin_mismatch=args.allow_origin_mismatch,
         )
+    except SourceNotFound as exc:
+        print(str(exc), file=sys.stderr)
+        return 3
     except (BuildError, KeyError, TypeError, UndefinedError) as exc:
         detail = repr(exc) if isinstance(exc, KeyError | TypeError | UndefinedError) else str(exc)
         print(f"error: {detail}", file=sys.stderr)
