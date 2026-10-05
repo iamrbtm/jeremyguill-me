@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 import importlib.util
 import json
 import re
@@ -260,7 +261,7 @@ def test_script_runs_as_program(tmp_path):
     assert not (tmp_path / "o.html").exists()
 
 
-def _body(html: str, tables: bool = False) -> str:
+def _body(html: str, tables: bool = True) -> str:
     return str(bop._prepare_body(html, ORIGIN, tables=tables))
 
 
@@ -279,21 +280,80 @@ def test_prepare_body_cannot_reassemble_tags(raw, forbidden):
 
 def test_prepare_body_strips_comments_including_unclosed():
     assert _body("a<!-- hidden -->b") == "ab"
-    assert _body("a<!-- never closed <b>x</b>") == "a"
+    assert "<b>" not in _body("a<!-- never closed <b>x</b>")
     assert "<scr" not in _body("<scr<!-- x -->ipt>alert(1)</script>").lower()
 
 
-def test_id_removed_only_inside_real_tags():
+def test_ids_dropped_but_text_and_attribute_values_preserved():
     assert _body('<h2 id="x">T</h2>') == "<h2>T</h2>"
-    assert _body('<p>&lt;div id=&quot;x&quot;&gt; and &lt;div id="x"&gt;</p>').count("id=") == 2
-    assert 'id="x"' in _body('<pre><code>&lt;div id="x"&gt;</code></pre>')
+    code = _body('<pre><code>&lt;div id="x"&gt;</code></pre>')
+    assert 'id="x"' in html.unescape(code)
+    img = '<img src="https://e.test/a.png" alt="see id=foo here">'
+    assert 'alt="see id=foo here"' in _body(img)
+    assert 'alt="href=/x"' in _body('<img src="https://e.test/a.png" alt="href=/x">')
+
+
+def test_alt_attribute_cannot_break_out():
+    raw = '<p><img src="https://e.test/m.png" alt="a id="></p><p>" onerror=alert(1) x</p>'
+    out = _body(raw)
+    imgs = [a for t, a in parse(out) if t == "img"]
+    assert imgs and imgs[0]["alt"] == "a id="
+    assert not any("onerror" in a for _, a in parse(out))
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "<img src=x onerror=alert(1)>",
+        "<svg onload=alert(1)></svg>",
+        '<a href="javascript:alert(1)">x</a>',
+        '<a href="  jav&#x09;ascript:alert(1)">x</a>',
+        '<iframe src="https://evil.test"></iframe>',
+        "<style>body{display:none}</style>",
+        '<meta http-equiv="refresh" content="0;url=https://evil.test">',
+        "<script>alert(1)</script>",
+        "<scr<script>ipt>alert(1)</script>",
+        "<templ<template>ate>x</template>",
+        "<p>ok</p><!-- unclosed <img src=x onerror=alert(1)>",
+    ],
+)
+def test_untrusted_body_is_neutralised(raw):
+    out = _body(raw)
+    tags = parse(out)
+    names = {t for t, _ in tags}
+    assert not names & {"script", "svg", "iframe", "style", "meta", "template"}
+    for _, attrs in tags:
+        assert not any(k.startswith("on") for k in attrs)
+        for key in ("href", "src"):
+            value = (attrs.get(key) or "").lower()
+            assert not value.startswith(("javascript:", "data:", "vbscript:"))
+    assert "alert(1)" not in out or "<" not in out.split("alert(1)")[0][-20:]
+
+
+def test_legit_content_survives_and_urls_absolutised():
+    raw = (
+        '<h2>Head</h2><p><strong>b</strong> <a href="https://e.test/x">l</a></p>'
+        '<ul><li>i</li></ul><table><tr><td>1</td></tr></table>'
+        '<img src="/media/public/a.webp" alt="A" width="5" height="5">'
+        '<a href="/work/x">w</a><a href="rel/path">r</a><a href="//evil.test/">p</a>'
+        '<a href="/\\evil.test">q</a>'
+    )
+    out = _body(raw, tables=True)
+    for frag in ("<h2>Head</h2>", "<strong>b</strong>", "<li>i</li>", "<table>"):
+        assert frag in out
+    hrefs = [a.get("href") for t, a in parse(out) if t == "a"]
+    assert f"{ORIGIN}/work/x" in hrefs and "https://e.test/x" in hrefs
+    assert not any(h and ("evil" in h or h == "rel/path") for h in hrefs)
+    srcs = [a.get("src") for t, a in parse(out) if t == "img"]
+    assert srcs == [f"{ORIGIN}/media/public/a.webp"]
+    assert 'tabindex="0" role="region" aria-label="Scrollable table"' in out
 
 
 def test_unquoted_root_relative_urls_are_absolutised():
-    assert _body("<img src=/y.png alt=a>") == f"<img src={ORIGIN}/y.png alt=a>"
-    assert _body('<a href="/z">z</a>') == f'<a href="{ORIGIN}/z">z</a>'
-    assert _body("<a href=//cdn.test/x>x</a>") == "<a href=//cdn.test/x>x</a>"
-    assert "&lt;a href=/z" in _body("<p>&lt;a href=/z&gt;</p>")
+    out = _body("<img src=/y.png alt=a>")
+    assert [a["src"] for t, a in parse(out) if t == "img"] == [f"{ORIGIN}/y.png"]
+    assert "href" not in _body("<a href=//cdn.test/x>x</a>")
+    assert "<a" not in _body("<p>&lt;a href=/z&gt;</p>")
 
 
 def test_focus_return_prefers_title_link():

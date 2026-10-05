@@ -19,11 +19,18 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+import nh3
 from jinja2 import Environment, StrictUndefined
 from markupsafe import Markup
 
 from portfolio.content.copy_apply import CopyError, parse_copy_file
-from portfolio.content.rendering import render_markdown
+from portfolio.content.rendering import (
+    ALLOWED_ATTRIBUTES,
+    ALLOWED_TAGS,
+    EXPERIENCE_ALLOWED_ATTRIBUTES,
+    EXPERIENCE_ALLOWED_TAGS,
+    render_markdown,
+)
 from portfolio.content.toc import enhance_case_study_html
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -33,29 +40,26 @@ DEFAULT_ORIGIN = "https://jeremyguill.me"
 DEFAULT_OUTPUT = REPO_ROOT / "one_page" / "index.html"
 FETCH_TIMEOUT = 20.0
 
-_TAG_SPAN = re.compile(r"<[^>]*>")
-_ID_ATTR = re.compile(r"""\sid\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)""", re.IGNORECASE)
-_COMMENT = re.compile(r"<!--.*?(?:-->|\Z)", re.DOTALL)
-_SCRIPT = re.compile(r"<script\b.*?</script\s*>|<script\b[^>]*>", re.IGNORECASE | re.DOTALL)
-_TEMPLATE_TAG = re.compile(r"</?template\b[^>]*>", re.IGNORECASE)
-_ROOT_URL = re.compile(r"""\b(src|href)(\s*=\s*)(["']?)/(?!/)""", re.IGNORECASE)
-_MAX_PASSES = 20
+_SAFE_ABSOLUTE = re.compile(r"(?:https?://|mailto:)", re.IGNORECASE)
+_UNSAFE_CHARS = re.compile(r"[\x00-\x20\x7f]")
+_TABLE_WRAPPER = '<div class="table-scroll">'
+# Scrollable regions must be keyboard focusable (axe: scrollable-region-focusable). nh3 strips
+# tabindex/role/aria-label, so these are added after sanitising, by exact string replacement.
+_TABLE_WRAPPER_FOCUSABLE = (
+    '<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable table">'
+)
+_PRE_FOCUSABLE = '<pre tabindex="0" role="region" aria-label="Code sample">'
 
 
-def _strip_dangerous(html: str) -> str:
-    """Remove comments, scripts and template tags until nothing more can be removed."""
-    for _ in range(_MAX_PASSES):
-        cleaned = _TEMPLATE_TAG.sub("", _SCRIPT.sub("", _COMMENT.sub("", html)))
-        if cleaned == html:
-            return cleaned
-        html = cleaned
-    # Still changing after the cap: drop every angle bracket rather than risk a reassembled tag.
-    return html.replace("<", "&lt;")
-
-
-def _fix_tag(origin: str, match: re.Match[str]) -> str:
-    tag = _ID_ATTR.sub("", match.group(0))
-    return _ROOT_URL.sub(lambda m: f"{m.group(1)}{m.group(2)}{m.group(3)}{origin}/", tag)
+def _safe_url(value: str, origin: str) -> str | None:
+    """Keep fragment, http(s)/mailto URLs; absolutise root-relative ones; drop everything else."""
+    if _UNSAFE_CHARS.search(value):
+        return None
+    if value.startswith("#") or _SAFE_ABSOLUTE.match(value):
+        return value
+    if value.startswith("/") and value[1:2] not in ("/", "\\"):
+        return origin + value
+    return None
 
 
 class BuildError(Exception):
@@ -63,17 +67,33 @@ class BuildError(Exception):
 
 
 def _prepare_body(html: str, origin: str, *, tables: bool) -> Markup:
-    """Make CMS-sanitized HTML safe to embed: no ids, scripts or template tags; absolute URLs."""
-    html = _strip_dangerous(html or "")
+    """Re-sanitise CMS HTML with the site allowlist (parser based) and absolutise URLs.
+
+    The export is normally already clean, but a hijacked or hand-edited source must not be able
+    to inject script, event handlers or unsafe URLs into the published page.
+    """
+    html = html or ""
     if tables:
         html, _ = enhance_case_study_html(html)
-        # Scrollable regions must be keyboard focusable (axe: scrollable-region-focusable).
-        html = html.replace(
-            '<div class="table-scroll">',
-            '<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable table">',
-        )
-    html = _TAG_SPAN.sub(lambda m: _fix_tag(origin, m), html)
-    return Markup(html)  # noqa: S704 - sanitized upstream by nh3, hardened above
+
+    def attribute_filter(tag: str, attr: str, value: str) -> str | None:
+        if attr in ("src", "href"):
+            return _safe_url(value, origin)
+        return value
+
+    cleaned = nh3.clean(
+        html,
+        tags=ALLOWED_TAGS if tables else EXPERIENCE_ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRIBUTES if tables else EXPERIENCE_ALLOWED_ATTRIBUTES,
+        url_schemes={"https", "http", "mailto"},
+        link_rel="noopener noreferrer",
+        strip_comments=True,
+        attribute_filter=attribute_filter,
+    )
+    if tables:
+        cleaned = cleaned.replace(_TABLE_WRAPPER, _TABLE_WRAPPER_FOCUSABLE)
+        cleaned = cleaned.replace("<pre>", _PRE_FOCUSABLE)
+    return Markup(cleaned)  # noqa: S704 - sanitised by nh3 above
 
 
 def _apply_overrides(
