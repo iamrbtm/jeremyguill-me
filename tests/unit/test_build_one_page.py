@@ -443,3 +443,31 @@ def test_applied_overrides_are_reported(capsys):
 def test_pre_blocks_are_keyboard_focusable():
     out = _body("<pre><code>x = 1</code></pre>")
     assert '<pre tabindex="0" role="region" aria-label="Code sample">' in out
+
+
+def _norm(text: str) -> str:
+    return " ".join(html.unescape(re.sub(r"<[^>]+>", " ", text)).split())
+
+
+def test_homepage_copy_matches_main_site_home_template():
+    """The strings the one-pager reproduces must still exist in the main site's home.html."""
+    home = _norm((ROOT / "src/portfolio/templates/public/home.html").read_text("utf-8"))
+    data = make_data()
+    data["profile"]["summary"] = ""
+    page = bop.build_page(data, origin=ORIGIN)
+    fallback = re.search(r'<meta name="description" content="([^"]*)"', page)
+    assert fallback and _norm(fallback.group(1)) in home
+
+    checked = 0
+    for marker in ('<section id="about"', '<section class="split-detail">',
+                   '<section id="work"', '<section class="principle-section">',
+                   '<section id="contact"'):
+        start = page.index(marker)
+        block = page[start:page.index("</section>", start)]
+        block = re.sub(r"<article.*?</article>", "", block, flags=re.DOTALL)
+        for _, inner in re.findall(r"<(h2|h3|p)[^>]*>(.*?)</\1>", block, flags=re.DOTALL):
+            text = _norm(inner)
+            if text:
+                assert text in home, text
+                checked += 1
+    assert checked >= 12
