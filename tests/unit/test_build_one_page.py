@@ -366,3 +366,29 @@ def test_dark_button_override_follows_base_rule():
     base = css.index(".button-primary { background: var(--blue)")
     dark = css.index(".button-primary { color: var(--paper); }")
     assert dark > base
+
+
+def test_project_url_off_origin_raises():
+    data = make_data()
+    data["projects"][0]["url"] = "javascript:alert(1)"
+    with pytest.raises(bop.BuildError, match="url"):
+        bop.build_page(data, origin=ORIGIN)
+
+
+def test_social_url_must_be_https():
+    data = make_data()
+    data["profile"]["linkedin_url"] = "javascript:alert(1)"
+    data["profile"]["github_url"] = "http://github.com/x"
+    out = bop.build_page(data, origin=ORIGIN)
+    assert "javascript:" not in out and "github.com/x" not in out
+    assert ">LinkedIn<" not in out and ">GitHub<" not in out
+
+
+def test_images_must_come_from_origin():
+    data = make_data()
+    data["projects"][0]["hero"]["url"] = "https://evil.test/h.webp"
+    data["projects"][0]["gallery"][0]["url"] = "javascript:x"
+    data["experience"][0]["logo"]["url"] = "https://evil.test/l.webp"
+    out = bop.build_page(data, origin=ORIGIN)
+    assert "evil.test" not in out and "javascript:" not in out
+    assert "case-hero" not in out

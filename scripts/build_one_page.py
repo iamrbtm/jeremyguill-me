@@ -96,6 +96,17 @@ def _prepare_body(html: str, origin: str, *, tables: bool) -> Markup:
     return Markup(cleaned)  # noqa: S704 - sanitised by nh3 above
 
 
+def _origin_image(image: Any, origin: str) -> dict[str, Any] | None:
+    """Keep an image only if its URL is served by the origin site."""
+    if isinstance(image, dict) and str(image.get("url", "")).startswith(origin + "/"):
+        return dict(image)
+    return None
+
+
+def _https_url(value: Any) -> str | None:
+    return value if isinstance(value, str) and value.startswith("https://") else None
+
+
 def _apply_overrides(
     projects: list[dict[str, Any]], overrides: dict[str, dict[str, Any]] | None
 ) -> list[dict[str, Any]]:
@@ -137,13 +148,21 @@ def build_page(
     for project in _apply_overrides(list(data.get("projects", [])), overrides):
         item = dict(project)
         item["stack"] = list(item.get("stack") or [])
-        item["gallery"] = list(item.get("gallery") or [])
+        if not str(item.get("url", "")).startswith(origin + "/"):
+            raise BuildError(
+                f"project {item.get('slug')!r} url is not on {origin}: {item.get('url')!r}"
+            )
+        item["hero"] = _origin_image(item.get("hero"), origin)
+        item["gallery"] = [
+            img for img in (_origin_image(g, origin) for g in item.get("gallery") or []) if img
+        ]
         item["body_html"] = _prepare_body(item.get("body_html", ""), origin, tables=True)
         projects.append(item)
 
     experience = []
     for entry in data.get("experience", []):
         item = dict(entry)
+        item["logo"] = _origin_image(item.get("logo"), origin)
         item["body_html"] = _prepare_body(item.get("body_html", ""), origin, tables=False)
         experience.append(item)
 
@@ -161,8 +180,8 @@ def build_page(
         headline=profile.get("headline") or "",
         summary=summary,
         availability=profile.get("availability_text"),
-        linkedin_url=profile.get("linkedin_url"),
-        github_url=profile.get("github_url"),
+        linkedin_url=_https_url(profile.get("linkedin_url")),
+        github_url=_https_url(profile.get("github_url")),
         capabilities=data.get("capabilities", []),
         projects=projects,
         experience=experience,
