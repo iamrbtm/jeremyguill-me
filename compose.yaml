@@ -5,6 +5,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-development}
       SECRET_KEY: ${SECRET_KEY:-development-only-secret}
+      SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY:-}
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://portfolio:development-only-postgres-password@db:5432/portfolio}
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-https://jeremyguill.me}
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-jeremyguill.me}
@@ -60,6 +61,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-development}
       SECRET_KEY: ${SECRET_KEY:-development-only-secret}
+      SETTINGS_ENCRYPTION_KEY: ${SETTINGS_ENCRYPTION_KEY:-}
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://portfolio:development-only-postgres-password@db:5432/portfolio}
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-https://jeremyguill.me}
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-jeremyguill.me}
